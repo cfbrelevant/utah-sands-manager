@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   SafeAreaView, StatusBar, View, Text, ScrollView, Pressable, ActivityIndicator,
-  TextInput, StyleSheet, Platform, KeyboardAvoidingView
+  TextInput, StyleSheet, Platform, KeyboardAvoidingView, RefreshControl, AppState
 } from 'react-native';
 import {
   Activity, ActivityKind, KindFilter, Property, normalizeUtahSandsHost,
@@ -79,6 +79,7 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [authError, setAuthError] = useState('');
   const [pushBusy, setPushBusy] = useState(false);
   const [pushStatus, setPushStatus] = useState('Not registered');
@@ -111,6 +112,7 @@ export default function App() {
 
   async function refreshOwner() {
     if (!backendConfigured || !session?.user.id) return;
+    setRefreshing(true);
     try {
       const next = await loadOwnerData(session.user.id);
       setProperties(next.properties);
@@ -118,7 +120,7 @@ export default function App() {
       setPropertyScope(old => (old === 'all' || next.properties.some(p => p.id === old)) ? old : 'all');
     } catch (error) {
       setToast(error instanceof Error ? error.message : 'Could not load owner data.');
-    }
+    } finally { setRefreshing(false); }
   }
 
   useEffect(() => {
@@ -127,6 +129,14 @@ export default function App() {
       void loadPreferences(session.user.id).then(setNotices)
         .catch(error => setToast(String(error)));
     } else if (backendConfigured) { setProperties([]); setEvents([]); }
+  }, [session?.user.id]);
+
+  useEffect(() => {
+    if (!session?.user.id) return;
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active') void refreshOwner();
+    });
+    return () => subscription.remove();
   }, [session?.user.id]);
 
   async function signIn() {
@@ -228,6 +238,7 @@ export default function App() {
         </View>
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }}
+        refreshControl={backendConfigured ? <RefreshControl refreshing={refreshing} onRefresh={() => void refreshOwner()} /> : undefined}
         contentContainerStyle={styles.scrollContent}>
         <View style={styles.previewBanner}>
           <Text style={styles.previewBannerTitle}>{backendConfigured ? 'Owner account connected' : 'Preview mode · Sample data only'}</Text>
