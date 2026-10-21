@@ -1,6 +1,6 @@
 // Cloudflare Email Routing Worker. Not deployed. Change the email routing rule
 // only AFTER verifying forwarding so existing messages cannot be lost.
-import { signEmailRelay } from '../supabase/functions/_shared/email-signing';
+import { signEmailRelay } from '../supabase/functions/_shared/email-signing.ts';
 
 type Envelope = {
   from: string;
