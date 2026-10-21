@@ -80,7 +80,7 @@ begin
     select 1 from public.resident_submissions s
     where s.property_id = v_property
       and s.client_submission_id = p_client_submission_id
-  ) then return true; end if;
+  ) then return false; end if;
 
   insert into public.site_submission_limits (property_id, fingerprint, hour_bucket, attempts)
   values (v_property, p_fingerprint, date_trunc('hour', now()), 1)
@@ -112,9 +112,10 @@ begin
       'new', 'website', 'site-request:' || v_submission::text, true, v_submission
     );
   end if;
-  return true;
+  -- true means a newly inserted request; false means an idempotent repeat.
+  return v_submission is not null;
 end;
-$$;
+$;
 -- Definer function in an exposed schema is safe ONLY with these restrictive grants.
 revoke all on function public.record_site_submission(
   text, text, text, text, text, text, uuid, text

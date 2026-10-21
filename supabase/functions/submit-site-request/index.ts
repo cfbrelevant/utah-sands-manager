@@ -2,6 +2,7 @@
 // challenge issued for the verified property hostname. No tenant identity claims.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { parsePublicRequest, permittedOrigin, normalizePropertyHost } from '../_shared/requests.ts';
+import { buildOwnerPushMessages } from '../_shared/push.ts';
 
 const siteverify = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 const allowedHeaders = 'content-type';
@@ -87,7 +88,7 @@ Deno.serve(async (req) => {
   const digest = await crypto.subtle.digest('SHA-256', bytes);
   const fingerprint = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
   const admin = createClient(url, adminKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { error } = await admin.rpc('record_site_submission', {
+  const { data: newlyCreated, error } = await admin.rpc('record_site_submission', {
     p_host: request.propertyHost,
     p_kind: request.kind,
     p_name: request.name,
@@ -102,6 +103,44 @@ Deno.serve(async (req) => {
     if (error.message.includes('not_accepting_requests')) return response(404, { error: 'This property is not accepting requests.' }, corsOrigin);
     console.error('Request ingestion failed', error.code);
     return response(503, { error: 'Unable to send this request. Please try again.' }, corsOrigin);
+  }
+  // Only notify when a fresh record was inserted. Delivery is best-effort;
+  // a transient push failure must not roll back a safely stored request.
+  // Expo push access tokens must be configured in the server environment.
+  if (newlyCreated === true && Deno.env.get('EXPO_ACCESS_TOKEN')) {
+    try {
+      const { data: property } = await admin.from('properties')
+        .select('id,owner_id').eq('host', request.propertyHost).maybeSingle();
+      if (property) {
+        const { data: preference } = await admin.from('owner_preferences')
+          .select('alert_messages,alert_maintenance').eq('owner_id', property.owner_id).maybeSingle();
+        const wantsNotification = request.kind === 'inquiry'
+          ? preference?.alert_messages !== false
+          : preference?.alert_maintenance !== false;
+        if (wantsNotification) {
+          const { data: devices } = await admin.from('owner_devices')
+            .select('expo_push_token').eq('owner_id', property.owner_id).limit(20);
+          const messages = buildOwnerPushMessages(
+            (devices ?? []).map(d => d.expo_push_token),
+            property.id, request.kind
+          );
+          if (messages.length) {
+            const pushed = await fetch('https://exp.host/--/api/v2/push/send', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + Deno.env.get('EXPO_ACCESS_TOKEN'),
+              },
+              body: JSON.stringify(messages),
+              signal: AbortSignal.timeout(4000),
+            });
+            if (!pushed.ok) console.error('Expo push delivery rejected', pushed.status);
+          }
+        }
+      }
+    } catch {
+      console.error('Nonfatal push delivery error');
+    }
   }
   return response(202, { ok: true, message: 'Request received. This is not an emergency service.' }, corsOrigin);
 });
