@@ -146,6 +146,7 @@ export default function App() {
 
   function markRead(id: string) {
     setEvents(old => old.map(e => e.id === id ? { ...e, unread: false } : e));
+    if (backendConfigured) void markEventSeen(id).catch(error => setToast(String(error)));
   }
 
   function addProperty() {
@@ -158,15 +159,22 @@ export default function App() {
       setInputError('That hostname is already used in this preview.');
       return;
     }
-    const id = 'planned-' + Date.now().toString();
-    setProperties(old => [...old, {
-      id, name: newName.trim(), address: newAddress.trim(), location: '',
-      host, state: 'planned'
-    }]);
+    if (backendConfigured && session?.user.id) {
+      void addOwnedProperty(session.user.id, {
+        name: newName.trim(), address: newAddress.trim(), location: '',
+        host, state: 'planned'
+      }).then(refreshOwner).catch(error => setToast(String(error)));
+    } else {
+      const id = 'planned-' + Date.now().toString();
+      setProperties(old => [...old, {
+        id, name: newName.trim(), address: newAddress.trim(), location: '',
+        host, state: 'planned'
+      }]);
+      setPropertyScope(id);
+    }
     setNewName(''); setNewAddress(''); setNewHost('');
     setShowAdd(false); setInputError('');
-    setPropertyScope(id);
-    setToast('Property added to this preview only. It is not connected or saved online.');
+    setToast(backendConfigured ? 'Property saved to owner account; DNS is not created automatically.' : 'Property added to this preview only; not saved online.');
   }
 
   function chooseProperty(id: string) {
@@ -205,10 +213,10 @@ export default function App() {
           <Text style={styles.brandSub}>OWNER MANAGER</Text>
         </View>
         <View style={styles.headerRight}>
-          <View style={styles.previewBadge}><Text style={styles.previewText}>PREVIEW</Text></View>
+          <View style={styles.previewBadge}><Text style={styles.previewText}>{backendConfigured ? 'OWNER' : 'PREVIEW'}</Text></View>
           <Pressable accessibilityRole="button" accessibilityLabel={'Activity: ' + unread + ' unread'}
             onPress={() => { setTab('Activity'); setFilter('all'); }} style={styles.notificationButton}>
-            <Text style={{ fontSize: 21, color: INK }}>♧</Text>
+            <Text style={{ fontSize: 21, color: INK }}>✉</Text>
             {unread > 0 ? <View style={styles.notificationDot} /> : null}
           </Pressable>
         </View>
@@ -216,8 +224,10 @@ export default function App() {
       <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}>
         <View style={styles.previewBanner}>
-          <Text style={styles.previewBannerTitle}>Preview mode · Sample data only</Text>
-          <Text style={styles.previewBannerText}>No payments, messages, or maintenance alerts are connected yet.</Text>
+          <Text style={styles.previewBannerTitle}>{backendConfigured ? 'Owner account connected' : 'Preview mode · Sample data only'}</Text>
+          <Text style={styles.previewBannerText}>{backendConfigured
+            ? 'Only events from trusted integrations appear here. Email, payments, and push still require configuration.'
+            : 'No payments, messages, or maintenance alerts are connected yet.'}</Text>
         </View>
         {toast ? <Pressable onPress={() => setToast('')} style={styles.infoBanner}>
           <Text style={styles.infoText}>{toast}   ×</Text>
@@ -234,11 +244,11 @@ export default function App() {
               selected={propertyScope === p.id} onPress={() => setPropertyScope(p.id)} />)}
           </ScrollView>
           <View style={styles.metricGrid}>
-            <Metric title="Payments received" value={formatUSD(collected)} help="Illustrative total" />
-            <Metric title="Needs attention" value={String(needsAttention)} help="Sample items unread" />
+            <Metric title="Payments received" value={formatUSD(collected)} help={backendConfigured ? 'Recorded event total' : 'Illustrative total'} />
+            <Metric title="Needs attention" value={String(needsAttention)} help={backendConfigured ? 'Unread action items' : 'Sample items unread'} />
             <Metric title="Properties" value={String(propertyScope === 'all' ? properties.length : 1)}
               help="Preview portfolio" />
-            <Metric title="Unread activity" value={String(unread)} help="Sample notifications" />
+            <Metric title="Unread activity" value={String(unread)} help={backendConfigured ? 'Owner updates' : 'Sample notifications'} />
           </View>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent activity</Text>
@@ -284,9 +294,14 @@ export default function App() {
               selected={filter === k.value} onPress={() => setFilter(k.value)} />)}
           </ScrollView>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{currentEvents.length} sample updates</Text>
-            <Pressable onPress={() => setEvents(old => old.map(e =>
-              propertyScope === 'all' || e.propertyId === propertyScope ? { ...e, unread: false } : e))}>
+            <Text style={styles.sectionTitle}>{currentEvents.length} {backendConfigured ? 'updates' : 'sample updates'}</Text>
+            <Pressable onPress={() => {
+              const targets = events.filter(e => e.unread && (propertyScope === 'all' || e.propertyId === propertyScope));
+              setEvents(old => old.map(e =>
+                propertyScope === 'all' || e.propertyId === propertyScope ? { ...e, unread: false } : e));
+              if (backendConfigured) void Promise.all(targets.map(e => markEventSeen(e.id)))
+                .catch(error => setToast(String(error)));
+            }}>
               <Text style={styles.actionLink}>Mark all read</Text>
             </Pressable>
           </View>
@@ -328,7 +343,7 @@ export default function App() {
               keyboardType="url" value={newHost} onChangeText={setNewHost} />
             {inputError ? <Text style={styles.errorText}>{inputError}</Text> : null}
             <Pressable onPress={addProperty} style={styles.primaryButton}><Text style={styles.primaryButtonText}>Add to preview</Text></Pressable>
-            <Text style={styles.note}>This does not create DNS, websites, or any online records.</Text>
+            <Text style={styles.note}>This does not create DNS or a website. {backendConfigured ? 'Property details are saved to your account.' : 'Preview additions disappear when the app reloads.'}</Text>
           </View> : null}
         </> : null}
 
@@ -345,7 +360,12 @@ export default function App() {
               <React.Fragment key={key}>
                 {i ? <View style={styles.line} /> : null}
                 <Pressable accessibilityRole="switch" accessibilityState={{ checked: notices[key] }}
-                  onPress={() => setNotices(prev => ({ ...prev, [key]: !prev[key] }))} style={styles.preferenceRow}>
+                  onPress={() => {
+                    const next = { ...notices, [key]: !notices[key] };
+                    setNotices(next);
+                    if (session?.user.id) void savePreferences(session.user.id, next)
+                      .catch(error => setToast(String(error)));
+                  }} style={styles.preferenceRow}>
                   <View style={{ flex: 1 }}><Text style={styles.activityTitle}>{title}</Text>
                     <Text style={styles.activityDetail}>{description}</Text></View>
                   <View style={[styles.toggle, notices[key] && styles.toggleOn]}><View style={[styles.toggleKnob, notices[key] && styles.toggleKnobOn]} /></View>
@@ -353,16 +373,16 @@ export default function App() {
               </React.Fragment>
             )}
           </View>
-          <Text style={styles.note}>Preferences are temporary in this preview. No push notifications are sent.</Text>
+          <Text style={styles.note}>{backendConfigured ? 'Preferences save to your owner account. Push delivery is not enabled yet.' : 'Preferences are temporary in this preview. No push notifications are sent.'}</Text>
           <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Connection status</Text></View>
           <View style={styles.card}>
             {[
-              ['Property website', 'utahsands.com · reference only'],
+              ['Property website', 'utahsands.com · integration not yet deployed'],
               ['Rent processor', 'Not connected'],
               ['Email inbox', 'Not connected'],
               ['Resident requests', 'Demo pages only'],
-              ['Owner account', 'Not configured'],
-              ['Mobile push', 'Not configured']
+              ['Owner account', backendConfigured ? 'Signed in' : 'Not configured'],
+              ['Mobile push', 'Not enabled']
             ].map(([title, sub], i) =>
               <View key={title} style={[styles.connectionRow, i > 0 && { borderTopWidth: 1, borderTopColor: LINE }]}>
                 <Text style={styles.connectionTitle}>{title}</Text>
@@ -370,9 +390,12 @@ export default function App() {
               </View>
             )}
           </View>
-          <Text style={styles.note}>Never enter actual renter details, bank information, or passwords into preview forms.</Text>
+          <Text style={styles.note}>Never enter bank/card details in this app. Actual payments must go through a verified provider.</Text>
+          {backendConfigured ? <Pressable onPress={() => void supabase?.auth.signOut()} style={styles.primaryButton}>
+            <Text style={styles.primaryButtonText}>Sign out</Text>
+          </Pressable> : null}
         </> : null}
-        <Text style={styles.footer}>UTAH SANDS · OWNER PREVIEW · NO LIVE TRANSACTIONS</Text>
+        <Text style={styles.footer}>{backendConfigured ? 'UTAH SANDS · OWNER ACCESS · NO IN-APP PAYMENTS' : 'UTAH SANDS · OWNER PREVIEW · NO LIVE TRANSACTIONS'}</Text>
       </ScrollView>
       <View style={styles.tabBar}>
         {(['Home', 'Activity', 'Properties', 'Settings'] as Tab[]).map(item =>
