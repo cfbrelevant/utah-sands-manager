@@ -1,4 +1,4 @@
-import { Activity, Property } from './domain';
+import type { Activity, Property } from './domain';
 
 export const ORIGINAL_PROPERTY: Property = {
   id: 'haviture',
