@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   SafeAreaView, StatusBar, View, Text, ScrollView, Pressable, ActivityIndicator,
-  TextInput, StyleSheet, Platform, KeyboardAvoidingView, RefreshControl, AppState
+  TextInput, StyleSheet, Platform, KeyboardAvoidingView, RefreshControl, AppState, Modal, Linking, Alert
 } from 'react-native';
 import {
   Activity, ActivityKind, KindFilter, Property, normalizeUtahSandsHost,
@@ -58,7 +58,7 @@ function Metric({ title, value, help }: { title: string; value: string; help: st
 
 function ActivityRow({ event, name, onRead }: { event: Activity; name: string; onRead: () => void }) {
   return <Pressable accessibilityRole="button"
-    accessibilityLabel={event.title + (event.unread ? ', mark as read' : ', read')}
+    accessibilityLabel={'Open details for ' + event.title}
     onPress={onRead} style={styles.activityRow}>
     <View style={styles.glyph}><Text style={styles.glyphText}>{kindGlyph[event.kind]}</Text></View>
     <View style={{ flex: 1, minWidth: 0 }}>
@@ -94,6 +94,7 @@ export default function App() {
   const [inputError, setInputError] = useState('');
   const [notices, setNotices] = useState({ payment: true, message: true, maintenance: true, inspection: false });
   const [toast, setToast] = useState('');
+  const [detailEvent, setDetailEvent] = useState<Activity | null>(null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -163,6 +164,11 @@ export default function App() {
   function markRead(id: string) {
     setEvents(old => old.map(e => e.id === id ? { ...e, unread: false } : e));
     if (backendConfigured) void markEventSeen(id).catch(error => setToast(String(error)));
+  }
+
+  function openEvent(event: Activity) {
+    markRead(event.id);
+    setDetailEvent(event);
   }
 
   function addProperty() {
@@ -275,7 +281,7 @@ export default function App() {
             {summaryEvents.length ? summaryEvents.slice(0, 4).map((e, i) =>
               <React.Fragment key={e.id}>
                 {i ? <View style={styles.line} /> : null}
-                <ActivityRow event={e} name={properties.find(p => p.id === e.propertyId)?.name ?? 'Property'} onRead={() => markRead(e.id)} />
+                <ActivityRow event={e} name={properties.find(p => p.id === e.propertyId)?.name ?? 'Property'} onRead={() => openEvent(e)} />
               </React.Fragment>
             ) : <Text style={styles.emptyText}>No activity for this property yet.</Text>}
           </View>
@@ -326,7 +332,7 @@ export default function App() {
             {currentEvents.length ? currentEvents.map((e, i) =>
               <React.Fragment key={e.id}>
                 {i ? <View style={styles.line} /> : null}
-                <ActivityRow event={e} name={properties.find(p => p.id === e.propertyId)?.name ?? 'Property'} onRead={() => markRead(e.id)} />
+                <ActivityRow event={e} name={properties.find(p => p.id === e.propertyId)?.name ?? 'Property'} onRead={() => openEvent(e)} />
               </React.Fragment>
             ) : <Text style={styles.emptyText}>Nothing matches this filter.</Text>}
           </View>
@@ -397,7 +403,7 @@ export default function App() {
               ['Property website', 'utahsands.com · integration not yet deployed'],
               ['Rent processor', 'Not connected'],
               ['Email inbox', 'Not connected'],
-              ['Resident requests', 'Demo pages only'],
+              ['Resident requests', backendConfigured ? 'Server endpoint prepared; site not deployed' : 'Demo pages only'],
               ['Owner account', backendConfigured ? 'Signed in' : 'Not configured'],
               ['Mobile push', pushStatus]
             ].map(([title, sub], i) =>
@@ -425,6 +431,42 @@ export default function App() {
         </> : null}
         <Text style={styles.footer}>{backendConfigured ? 'UTAH SANDS · OWNER ACCESS · NO IN-APP PAYMENTS' : 'UTAH SANDS · OWNER PREVIEW · NO LIVE TRANSACTIONS'}</Text>
       </ScrollView>
+      <Modal visible={!!detailEvent} transparent animationType="slide"
+        onRequestClose={() => setDetailEvent(null)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalPanel}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 22 }}>
+              <Text style={styles.eyebrow}>PROPERTY ACTIVITY</Text>
+              <Text style={styles.modalTitle}>{detailEvent?.title}</Text>
+              <Text style={styles.activityMeta}>{detailEvent?.time}</Text>
+              {detailEvent?.submission ? <>
+                <View style={styles.unverifiedNotice}>
+                  <Text style={styles.previewBannerTitle}>Sender identity not verified</Text>
+                  <Text style={styles.previewBannerText}>Treat this as an incoming report, not proof of tenancy or an emergency notice.</Text>
+                </View>
+                <Text style={styles.detailLabel}>FROM</Text>
+                <Text style={styles.detailValue}>{detailEvent.submission.senderName}</Text>
+                <Text selectable style={styles.detailMuted}>{detailEvent.submission.senderEmail}</Text>
+                <Text style={styles.detailLabel}>SUBJECT</Text>
+                <Text style={styles.detailValue}>{detailEvent.submission.subject}</Text>
+                <Text style={styles.detailLabel}>MESSAGE</Text>
+                <Text selectable style={styles.detailValue}>{detailEvent.submission.message}</Text>
+                <Pressable style={styles.primaryButton} onPress={() => {
+                  const dest = 'mailto:' + encodeURIComponent(detailEvent.submission!.senderEmail)
+                    + '?subject=' + encodeURIComponent('Re: ' + detailEvent.submission!.subject);
+                  void Linking.openURL(dest).catch(() =>
+                    Alert.alert('Email unavailable', 'Could not open an email app on this device.'));
+                }}>
+                  <Text style={styles.primaryButtonText}>Reply by email</Text>
+                </Pressable>
+              </> : <Text style={[styles.detailValue, { marginTop: 24 }]}>{detailEvent?.detail}</Text>}
+              <Pressable onPress={() => setDetailEvent(null)} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Close</Text>
+              </Pressable>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
       <View style={styles.tabBar}>
         {(['Home', 'Activity', 'Properties', 'Settings'] as Tab[]).map(item =>
           <Pressable key={item} accessibilityRole="tab" accessibilityState={{ selected: tab === item }}
@@ -526,6 +568,19 @@ const styles = StyleSheet.create({
   tabSymbol: { fontSize: 21, color: '#909B91' },
   tabLabel: { color: '#909B91', fontSize: 10, marginTop: 3, fontWeight: '600' },
   activeTab: { color: GREEN, fontWeight: '800' },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(20,30,25,0.42)',
+    justifyContent: 'flex-end' },
+  modalPanel: { maxHeight: '88%', borderTopLeftRadius: 18, borderTopRightRadius: 18,
+    backgroundColor: PAPER, paddingHorizontal: 23, paddingTop: 28 },
+  modalTitle: { color: INK, fontSize: 26, fontWeight: '700', marginTop: 9 },
+  unverifiedNotice: { marginTop: 20, padding: 12, borderRadius: 9,
+    backgroundColor: '#FBF8F0', borderWidth: 1, borderColor: '#E9DABD' },
+  detailLabel: { color: GREEN, fontSize: 10, letterSpacing: 1.2, fontWeight: '700', marginTop: 22 },
+  detailValue: { color: INK, fontSize: 15, lineHeight: 23, marginTop: 8 },
+  detailMuted: { color: MUTED, fontSize: 12, marginTop: 4 },
+  secondaryButton: { borderWidth: 1, borderColor: LINE, padding: 14, borderRadius: 9,
+    marginTop: 18, alignItems: 'center' },
+  secondaryButtonText: { color: INK, fontWeight: '700', fontSize: 13 },
   footer: { color: '#9A9F98', textAlign: 'center', fontSize: 9, letterSpacing: 1,
     marginTop: 34, marginBottom: 5 },
 });

@@ -4,5 +4,9 @@
     "strict": true,
     "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": [
+    "App.tsx",
+    "src/**/*.ts",
+    "tests/**/*.ts"
+  ]
 }

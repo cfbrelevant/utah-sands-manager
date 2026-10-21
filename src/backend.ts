@@ -21,10 +21,18 @@ export async function loadOwnerData(ownerId: string): Promise<{ properties: Prop
   const safeProperties = (properties ?? []) as Property[];
   if (!safeProperties.length) return { properties: [], events: [] };
   const { data: events, error: eventsError } = await supabase.from('activity_events')
-    .select('id,property_id,kind,title,detail,status,amount_cents,needs_attention,seen_at,occurred_at')
+    .select('id,property_id,kind,title,detail,status,amount_cents,needs_attention,seen_at,occurred_at,resident_submission_id')
     .in('property_id', safeProperties.map(p => p.id))
     .order('occurred_at', { ascending: false }).limit(100);
   if (eventsError) throw eventsError;
+  const requestIds = (events ?? []).map(e => e.resident_submission_id).filter((id): id is string => !!id);
+  const { data: submissions, error: submissionError } = requestIds.length
+    ? await supabase.from('resident_submissions')
+        .select('id,sender_name,sender_email,subject,message,status')
+        .in('id', requestIds)
+    : { data: [], error: null };
+  if (submissionError) throw submissionError;
+  const byRequest = new Map((submissions ?? []).map(item => [item.id, item]));
   return {
     properties: safeProperties,
     events: (events ?? []).map(e => ({
@@ -39,6 +47,14 @@ export async function loadOwnerData(ownerId: string): Promise<{ properties: Prop
       needsAttention: Boolean(e.needs_attention),
       unread: !e.seen_at,
       origin: 'verified' as const,
+      submission: e.resident_submission_id && byRequest.has(e.resident_submission_id)
+        ? {
+            senderName: byRequest.get(e.resident_submission_id)!.sender_name,
+            senderEmail: byRequest.get(e.resident_submission_id)!.sender_email,
+            subject: byRequest.get(e.resident_submission_id)!.subject,
+            message: byRequest.get(e.resident_submission_id)!.message,
+            status: byRequest.get(e.resident_submission_id)!.status,
+          } : undefined,
     })),
   };
 }

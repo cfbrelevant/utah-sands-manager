@@ -22,6 +22,13 @@ export type Activity = {
   needsAttention: boolean;
   origin: EventOrigin;
   amountCents?: number;
+  submission?: {
+    senderName: string;
+    senderEmail: string;
+    subject: string;
+    message: string;
+    status: string;
+  };
 };
 
 export type KindFilter = 'all' | ActivityKind;

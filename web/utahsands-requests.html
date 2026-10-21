@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contact · Utah Sands</title>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#24332b;background:#f5f6f2}
+*{box-sizing:border-box}main{max-width:620px;margin:7vh auto;padding:26px}
+h1{font-family:Georgia,serif;font-size:clamp(2rem,5vw,3rem);font-weight:500;letter-spacing:-.03em;margin-bottom:.3em}
+p{line-height:1.6;color:#59675c}form{background:#fff;border:1px solid #e2e7df;border-radius:12px;padding:25px}
+label{display:block;font-size:.86rem;font-weight:650;margin-top:17px;margin-bottom:7px}
+input,select,textarea{width:100%;border:1px solid #bec8be;border-radius:7px;padding:12px;font:inherit;background:white;color:#24332b}
+textarea{min-height:145px;resize:vertical}.assistive{position:absolute;left:-10000px}
+button{background:#315345;color:white;border:0;border-radius:7px;padding:13px 18px;font:inherit;font-weight:700;margin-top:19px;cursor:pointer}
+button:disabled{opacity:.5}.hint{font-size:.82rem}#result{min-height:24px;margin-top:15px}
+</style></head>
+<body><main>
+<p>UTAH SANDS / PROPERTY CONTACT</p>
+<h1>Get in touch</h1>
+<p>Ask about a property or send a maintenance report. Maintenance reports submitted here are not proof of tenant identity or emergency notices. For danger or immediate threats, contact emergency services directly.</p>
+<form id="request-form">
+<label for="kind">What can we help with?</label>
+<select id="kind" name="kind"><option value="inquiry">Rental inquiry</option><option value="maintenance">Maintenance report</option></select>
+<label for="name">Name</label><input id="name" name="name" required minlength="2" maxlength="100" autocomplete="name">
+<label for="email">Reply email</label><input type="email" id="email" name="email" required autocomplete="email">
+<label for="subject">Subject</label><input id="subject" name="subject" required minlength="3" maxlength="140">
+<label for="message">Message</label><textarea id="message" name="message" required minlength="10" maxlength="3000"></textarea>
+<div class="assistive" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+<div class="cf-turnstile" data-sitekey="REPLACE_WITH_PUBLIC_TURNSTILE_SITE_KEY" data-action="resident-request"></div>
+<button id="submit" type="submit">Send request</button>
+<p id="result" role="status" aria-live="polite"></p>
+</form><p class="hint">By sending this request you agree that your contact information will be used to reply and manage this request. No payments are collected here.</p>
+</main><script>
+const ENDPOINT = 'REPLACE_WITH_SUPABASE_EDGE_FUNCTION_URL'; // Never put a service-role key or Turnstile secret in this page.
+const form = document.getElementById('request-form');
+const result = document.getElementById('result');
+const button = document.getElementById('submit');
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (ENDPOINT.startsWith('REPLACE_')) { result.textContent = 'Form is not connected yet.'; return; }
+  const fields = new FormData(form);
+  const token = fields.get('cf-turnstile-response');
+  if (!token) { result.textContent = 'Complete the security check.'; return; }
+  button.disabled = true;
+  result.textContent = 'Sending…';
+  try {
+    const response = await fetch(ENDPOINT, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        propertyHost: location.hostname.toLowerCase(),
+        kind: fields.get('kind'), name: fields.get('name'),
+        email: fields.get('email'), subject: fields.get('subject'),
+        message: fields.get('message'), website: fields.get('website'),
+        submissionId: crypto.randomUUID(), turnstileToken: token
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Request could not be sent.');
+    result.textContent = 'Your request has been received. You can expect a reply from the property owner.';
+    form.reset();
+  } catch (error) {
+    result.textContent = error.message || 'Request could not be sent.';
+  } finally {
+    button.disabled = false;
+    if (window.turnstile) window.turnstile.reset();
+  }
+});
+</script></body></html>

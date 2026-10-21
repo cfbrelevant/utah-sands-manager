@@ -11,10 +11,11 @@ A clean, owner-only Expo mobile app for managing `utahsands.com` and future prop
 - Supabase **owner-authenticated mode** (when configured), with owner-only property and event access.
 - Properties can be created within the owner's account. Website creation and DNS setup are intentionally separate.
 - Read / mark all read events, swipe-to-refresh, refresh after returning to app.
+- Private request-detail view with sender contact info and a reply-by-email shortcut (after the backend is configured).
 - Preference storage and opt-in phone push-token registration in a development build.
 - Supabase schema with Row Level Security; clients cannot create verified payment events.
 
-**Not yet active:** Real rental payments, incoming email ingestion, website maintenance submissions, server-generated push notifications, and tenant logins. No money changes hands in this app. The current website's resident forms are demos. Do not use sample events as accounting records.
+**Not yet active:** Real rental payments, incoming email ingestion, live website maintenance submissions, server-generated push notifications, and tenant logins. No money changes hands in this app. A secure Turnstile-backed inquiry/maintenance ingress and sample web form have been added in the branch, but require deployment and server configuration. See [site request integration](docs/SITE_REQUESTS.md). The current website's resident forms are demos. Do not use sample events as accounting records.
 
 ## Development
 
