@@ -1,0 +1,71 @@
+import 'react-native-url-polyfill/auto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createClient } from '@supabase/supabase-js';
+import type { Activity, Property } from '../domain';
+
+const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const publishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+export const backendConfigured = Boolean(url && publishableKey);
+export const supabase = backendConfigured
+  ? createClient(url!, publishableKey!, {
+      auth: { storage: AsyncStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+    })
+  : null;
+
+export async function loadOwnerData(ownerId: string): Promise<{ properties: Property[]; events: Activity[] }> {
+  if (!supabase) throw new Error('Backend is not configured.');
+  const { data: properties, error } = await supabase.from('properties')
+    .select('id,name,address,location,host,state')
+    .eq('owner_id', ownerId).order('created_at');
+  if (error) throw error;
+  const safeProperties = (properties ?? []) as Property[];
+  if (!safeProperties.length) return { properties: [], events: [] };
+  const { data: events, error: eventsError } = await supabase.from('activity_events')
+    .select('id,property_id,kind,title,detail,status,amount_cents,needs_attention,seen_at,occurred_at')
+    .in('property_id', safeProperties.map(p => p.id))
+    .order('occurred_at', { ascending: false }).limit(100);
+  if (eventsError) throw eventsError;
+  return {
+    properties: safeProperties,
+    events: (events ?? []).map(e => ({
+      id: e.id,
+      propertyId: e.property_id,
+      kind: e.kind as Activity['kind'],
+      title: e.title,
+      detail: e.detail,
+      status: e.status,
+      time: new Date(e.occurred_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      amountCents: e.amount_cents ?? undefined,
+      needsAttention: Boolean(e.needs_attention),
+      unread: !e.seen_at,
+      origin: 'verified' as const,
+    })),
+  };
+}
+
+export async function addOwnedProperty(ownerId: string, property: Omit<Property, 'id'>): Promise<void> {
+  if (!supabase) throw new Error('Backend is not configured.');
+  const { error } = await supabase.from('properties').insert({ ...property, owner_id: ownerId });
+  if (error) throw error;
+}
+
+export async function markEventSeen(id: string): Promise<void> {
+  if (!supabase) return;
+  const { error } = await supabase.from('activity_events').update({ seen_at: new Date().toISOString() }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function savePreferences(ownerId: string, preferences: {
+  payment: boolean; message: boolean; maintenance: boolean; inspection: boolean;
+}): Promise<void> {
+  if (!supabase) return;
+  const { error } = await supabase.from('owner_preferences').upsert({
+    owner_id: ownerId,
+    alert_payments: preferences.payment,
+    alert_messages: preferences.message,
+    alert_maintenance: preferences.maintenance,
+    alert_inspections: preferences.inspection,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+}
