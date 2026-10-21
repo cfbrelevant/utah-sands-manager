@@ -4,8 +4,11 @@ const encoder = new TextEncoder();
 const validHex = (value: string) => /^[a-f0-9]{64}$/.test(value);
 const toHex = (array: Uint8Array): string =>
   Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
-const fromHex = (value: string): Uint8Array =>
-  new Uint8Array(value.match(/.{2}/g)!.map(pair => parseInt(pair, 16)));
+const fromHex = (value: string): Uint8Array<ArrayBuffer> => {
+  const bytes = new Uint8Array(new ArrayBuffer(32));
+  for (let i = 0; i < 32; i++) bytes[i] = parseInt(value.slice(i * 2, i * 2 + 2), 16);
+  return bytes;
+};
 
 async function hmacKey(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey('raw', encoder.encode(secret), {
