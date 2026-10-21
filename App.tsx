@@ -251,7 +251,7 @@ export default function App() {
         </Pressable> : null}
 
         {tab === 'Home' ? <>
-          <Heading eyebrow="Portfolio overview" title="Good afternoon."
+          <Heading eyebrow="Portfolio overview" title="Your portfolio"
             subtitle="A clear view of what needs your attention." />
           <Text style={styles.smallLabel}>VIEWING</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}
