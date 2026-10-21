@@ -69,3 +69,19 @@ export async function savePreferences(ownerId: string, preferences: {
   });
   if (error) throw error;
 }
+
+export async function loadPreferences(ownerId: string): Promise<{
+  payment: boolean; message: boolean; maintenance: boolean; inspection: boolean;
+}> {
+  if (!supabase) throw new Error('Backend is not configured.');
+  const { data, error } = await supabase.from('owner_preferences')
+    .select('alert_payments,alert_messages,alert_maintenance,alert_inspections')
+    .eq('owner_id', ownerId).maybeSingle();
+  if (error) throw error;
+  return {
+    payment: data?.alert_payments ?? true,
+    message: data?.alert_messages ?? true,
+    maintenance: data?.alert_maintenance ?? true,
+    inspection: data?.alert_inspections ?? false,
+  };
+}
