@@ -22,6 +22,11 @@ export type Activity = {
   needsAttention: boolean;
   origin: EventOrigin;
   amountCents?: number;
+  emailRecord?: {
+    recipient: string;
+    sender: string;
+    subject: string;
+  };
   submission?: {
     senderName: string;
     senderEmail: string;

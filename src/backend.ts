@@ -21,7 +21,7 @@ export async function loadOwnerData(ownerId: string): Promise<{ properties: Prop
   const safeProperties = (properties ?? []) as Property[];
   if (!safeProperties.length) return { properties: [], events: [], rentLedger: [] };
   const { data: events, error: eventsError } = await supabase.from('activity_events')
-    .select('id,property_id,kind,title,detail,status,amount_cents,needs_attention,seen_at,occurred_at,resident_submission_id')
+    .select('id,property_id,kind,title,detail,status,amount_cents,needs_attention,seen_at,occurred_at,resident_submission_id,inbound_email_id')
     .in('property_id', safeProperties.map(p => p.id))
     .order('occurred_at', { ascending: false }).limit(100);
   if (eventsError) throw eventsError;
@@ -33,6 +33,14 @@ export async function loadOwnerData(ownerId: string): Promise<{ properties: Prop
     : { data: [], error: null };
   if (submissionError) throw submissionError;
   const byRequest = new Map((submissions ?? []).map(item => [item.id, item]));
+  const emailIds = (events ?? []).map(e => e.inbound_email_id).filter((id): id is string => !!id);
+  const { data: incoming, error: incomingError } = emailIds.length
+    ? await supabase.from('inbound_email_records')
+        .select('id,recipient,envelope_sender,subject')
+        .in('id', emailIds)
+    : { data: [], error: null };
+  if (incomingError) throw incomingError;
+  const byEmail = new Map((incoming ?? []).map(item => [item.id, item]));
   const { data: rentRows, error: rentError } = await supabase.from('rent_payments')
     .select('payment_intent_id,property_id,received_cents,refunded_cents,currency,confirmed_at')
     .in('property_id', safeProperties.map(p => p.id))
@@ -60,6 +68,12 @@ export async function loadOwnerData(ownerId: string): Promise<{ properties: Prop
       needsAttention: Boolean(e.needs_attention),
       unread: !e.seen_at,
       origin: 'verified' as const,
+      emailRecord: e.inbound_email_id && byEmail.has(e.inbound_email_id)
+        ? {
+            recipient: byEmail.get(e.inbound_email_id)!.recipient,
+            sender: byEmail.get(e.inbound_email_id)!.envelope_sender,
+            subject: byEmail.get(e.inbound_email_id)!.subject,
+          } : undefined,
       submission: e.resident_submission_id && byRequest.has(e.resident_submission_id)
         ? {
             senderName: byRequest.get(e.resident_submission_id)!.sender_name,

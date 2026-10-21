@@ -404,7 +404,7 @@ export default function App() {
             {[
               ['Property website', 'utahsands.com · integration not yet deployed'],
               ['Rent processor', backendConfigured ? 'Webhook ready for configuration · not active' : 'Not connected'],
-              ['Email inbox', 'Not connected'],
+              ['Email inbox', backendConfigured ? 'Email Worker prepared · routing not activated' : 'Not connected'],
               ['Resident requests', backendConfigured ? 'Server endpoint prepared; site not deployed' : 'Demo pages only'],
               ['Owner account', backendConfigured ? 'Signed in' : 'Not configured'],
               ['Mobile push', pushStatus]
@@ -460,6 +460,25 @@ export default function App() {
                     Alert.alert('Email unavailable', 'Could not open an email app on this device.'));
                 }}>
                   <Text style={styles.primaryButtonText}>Reply by email</Text>
+                </Pressable>
+              </> : detailEvent?.emailRecord ? <>
+                <View style={styles.unverifiedNotice}>
+                  <Text style={styles.previewBannerTitle}>Unverified email sender</Text>
+                  <Text style={styles.previewBannerText}>Received through your email route. The sender's identity is not authenticated; original email and attachments remain in your regular inbox.</Text>
+                </View>
+                <Text style={styles.detailLabel}>FROM (ENVELOPE)</Text>
+                <Text selectable style={styles.detailValue}>{detailEvent.emailRecord.sender}</Text>
+                <Text style={styles.detailLabel}>TO</Text>
+                <Text selectable style={styles.detailValue}>{detailEvent.emailRecord.recipient}</Text>
+                <Text style={styles.detailLabel}>SUBJECT</Text>
+                <Text selectable style={styles.detailValue}>{detailEvent.emailRecord.subject}</Text>
+                <Pressable onPress={() => {
+                  const to = encodeURIComponent(detailEvent.emailRecord!.sender);
+                  const subject = encodeURIComponent('Re: ' + detailEvent.emailRecord!.subject);
+                  void Linking.openURL('mailto:' + to + '?subject=' + subject).catch(() =>
+                    Alert.alert('Email unavailable', 'Could not open an email app.'));
+                }} style={styles.primaryButton}>
+                  <Text style={styles.primaryButtonText}>Reply in email app</Text>
                 </Pressable>
               </> : <Text style={[styles.detailValue, { marginTop: 24 }]}>{detailEvent?.detail}</Text>}
               <Pressable onPress={() => setDetailEvent(null)} style={styles.secondaryButton}>

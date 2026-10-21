@@ -16,7 +16,7 @@ Current app is a **preview**. It does not connect to live email, payment process
 2. Confirm you control each property hostname; create property + hostname records and verify routing. Never decide property ownership from user-submitted hostname alone.
 3. Replace the current UtahSands demo forms with authenticated backend submissions. Add file storage with secure access for photos.
 4. Add a **trusted server-side PaymentIntent creation** flow and register its `pi_...` ID/property/expected USD amount in `stripe_payment_bindings` before the payer is charged. The signed Stripe webhook receiver is present in code and maintains a separate ledger for successes and cumulative refunds. Do **not** enable real payments until refund, failure, chargeback, dispute, payout reconciliation, and authorization flows have had a complete end-to-end security review (see `docs/STRIPE_RENT.md`).
-5. Route inbound emails through a verified service into server-side event records; avoid storing unnecessary email content. Do not expose tenant email addresses in logs.
+5. The Cloudflare email Worker and signed Supabase Edge intake are available **in code only**. First verify the existing forward-to inbox will be preserved; then link verified property inbox aliases, deploy the Worker and test forwarding plus alerts. See `docs/EMAIL_ALERTS.md`. No raw email bodies, attachments or credentials are stored in the app database.
 6. Register Expo push tokens **after owner authentication**, send notifications only from a trusted server, and honor per-owner alert preferences. Never embed a service-role key or payment secret in the app.
 7. Add audit trail, data retention policy, opt-out, secure attachments, accessibility checks, and tests on real devices.
 
