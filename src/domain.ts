@@ -31,6 +31,23 @@ export type Activity = {
   };
 };
 
+export type RentLedgerEntry = {
+  paymentIntentId: string;
+  propertyId: string;
+  receivedCents: number;
+  refundedCents: number;
+  currency: 'usd';
+  confirmedAt: string | null;
+};
+
+export function netConfirmedRentCents(entries: RentLedgerEntry[], propertyId = 'all'): number {
+  return entries
+    .filter(entry => (propertyId === 'all' || entry.propertyId === propertyId) &&
+      !!entry.confirmedAt && entry.currency === 'usd')
+    .reduce((total, entry) =>
+      total + Math.max(0, entry.receivedCents - entry.refundedCents), 0);
+}
+
 export type KindFilter = 'all' | ActivityKind;
 
 export function normalizeUtahSandsHost(input: string): string | null {

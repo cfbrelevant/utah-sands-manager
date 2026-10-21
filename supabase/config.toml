@@ -1,2 +1,6 @@
 [functions.submit-site-request]
 verify_jwt = false
+
+[functions.stripe-rent-webhook]
+# Stripe supplies a signed webhook, not a Supabase JWT.
+verify_jwt = false

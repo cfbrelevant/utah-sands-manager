@@ -4,8 +4,8 @@ import {
   TextInput, StyleSheet, Platform, KeyboardAvoidingView, RefreshControl, AppState, Modal, Linking, Alert
 } from 'react-native';
 import {
-  Activity, ActivityKind, KindFilter, Property, normalizeUtahSandsHost,
-  activitiesFor, attentionCount, unseenCount, formatUSD, sumRecordedPayments
+  Activity, ActivityKind, KindFilter, Property, RentLedgerEntry, normalizeUtahSandsHost,
+  activitiesFor, attentionCount, unseenCount, formatUSD, sumRecordedPayments, netConfirmedRentCents
 } from './src/domain';
 import { ORIGINAL_PROPERTY, SAMPLE_EVENTS } from './src/sample';
 import type { Session } from '@supabase/supabase-js';
@@ -85,6 +85,7 @@ export default function App() {
   const [pushStatus, setPushStatus] = useState('Not registered');
   const [properties, setProperties] = useState<Property[]>(backendConfigured ? [] : [ORIGINAL_PROPERTY]);
   const [events, setEvents] = useState<Activity[]>(backendConfigured ? [] : SAMPLE_EVENTS);
+  const [rentLedger, setRentLedger] = useState<RentLedgerEntry[]>([]);
   const [propertyScope, setPropertyScope] = useState('all');
   const [filter, setFilter] = useState<KindFilter>('all');
   const [showAdd, setShowAdd] = useState(false);
@@ -118,6 +119,7 @@ export default function App() {
       const next = await loadOwnerData(session.user.id);
       setProperties(next.properties);
       setEvents(next.events);
+      setRentLedger(next.rentLedger);
       setPropertyScope(old => (old === 'all' || next.properties.some(p => p.id === old)) ? old : 'all');
     } catch (error) {
       setToast(error instanceof Error ? error.message : 'Could not load owner data.');
@@ -129,7 +131,7 @@ export default function App() {
       void refreshOwner();
       void loadPreferences(session.user.id).then(setNotices)
         .catch(error => setToast(String(error)));
-    } else if (backendConfigured) { setProperties([]); setEvents([]); }
+    } else if (backendConfigured) { setProperties([]); setEvents([]); setRentLedger([]); }
   }, [session?.user.id]);
 
   useEffect(() => {
@@ -157,7 +159,7 @@ export default function App() {
   const scopeName = selected?.name ?? 'All properties';
   const currentEvents = useMemo(() => activitiesFor(events, propertyScope, filter), [events, propertyScope, filter]);
   const summaryEvents = useMemo(() => activitiesFor(events, propertyScope, 'all'), [events, propertyScope]);
-  const collected = sumRecordedPayments(events, propertyScope);
+  const collected = backendConfigured ? netConfirmedRentCents(rentLedger, propertyScope) : sumRecordedPayments(events, propertyScope);
   const needsAttention = attentionCount(events, propertyScope);
   const unread = unseenCount(events, propertyScope);
 
@@ -267,7 +269,7 @@ export default function App() {
               selected={propertyScope === p.id} onPress={() => setPropertyScope(p.id)} />)}
           </ScrollView>
           <View style={styles.metricGrid}>
-            <Metric title="Payments received" value={formatUSD(collected)} help={backendConfigured ? 'Recorded event total' : 'Illustrative total'} />
+            <Metric title={backendConfigured ? 'Confirmed rent (net)' : 'Example rent received'} value={formatUSD(collected)} help={backendConfigured ? 'Less refunds · not bank payouts' : 'Illustrative total'} />
             <Metric title="Needs attention" value={String(needsAttention)} help={backendConfigured ? 'Unread action items' : 'Sample items unread'} />
             <Metric title="Properties" value={String(propertyScope === 'all' ? properties.length : 1)}
               help="Preview portfolio" />
@@ -401,7 +403,7 @@ export default function App() {
           <View style={styles.card}>
             {[
               ['Property website', 'utahsands.com · integration not yet deployed'],
-              ['Rent processor', 'Not connected'],
+              ['Rent processor', backendConfigured ? 'Webhook ready for configuration · not active' : 'Not connected'],
               ['Email inbox', 'Not connected'],
               ['Resident requests', backendConfigured ? 'Server endpoint prepared; site not deployed' : 'Demo pages only'],
               ['Owner account', backendConfigured ? 'Signed in' : 'Not configured'],

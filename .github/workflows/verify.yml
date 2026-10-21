@@ -24,3 +24,4 @@ jobs:
         with:
           deno-version: v2.x
       - run: deno check --no-config supabase/functions/submit-site-request/index.ts
+      - run: deno check --no-config supabase/functions/stripe-rent-webhook/index.ts

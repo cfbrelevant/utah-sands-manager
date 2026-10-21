@@ -14,8 +14,9 @@ A clean, owner-only Expo mobile app for managing `utahsands.com` and future prop
 - Private request-detail view with sender contact info and a reply-by-email shortcut (after the backend is configured).
 - Preference storage and opt-in phone push-token registration in a development build.
 - Supabase schema with Row Level Security; clients cannot create verified payment events.
+- Server-verified Stripe webhook receiver and separate net rent ledger (future deployment, no payment flows active).
 
-**Not yet active:** Real rental payments, incoming email ingestion, live website maintenance submissions, server-generated push notifications, and tenant logins. No money changes hands in this app. A secure Turnstile-backed inquiry/maintenance ingress and sample web form have been added in the branch, but require deployment and server configuration. See [site request integration](docs/SITE_REQUESTS.md). The current website's resident forms are demos. Do not use sample events as accounting records.
+**Not yet active:** Live rental payments, incoming email ingestion, live website maintenance submissions, server-generated push notifications, and tenant logins. A signed Stripe webhook receiver and net rent ledger are implemented but require a verified checkout-creation integration and deployment. No money changes hands in this app. A secure Turnstile-backed inquiry/maintenance ingress and sample web form have been added in the branch, but require deployment and server configuration. See [site request integration](docs/SITE_REQUESTS.md). The current website's resident forms are demos. Do not use sample events as accounting records.
 
 ## Development
 
