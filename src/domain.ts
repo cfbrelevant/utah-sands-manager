@@ -7,7 +7,7 @@ export type Property = {
   address: string;
   location: string;
   host: string;
-  state: 'preview' | 'planned' | 'active';
+  state: 'preview' | 'planned' | 'active' | 'archived';
 };
 
 export type Activity = {
