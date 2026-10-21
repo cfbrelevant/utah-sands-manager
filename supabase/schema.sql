@@ -65,7 +65,10 @@ alter table public.owner_preferences enable row level security;
 -- Restrict client-facing privileges. RLS additionally checks ownership.
 revoke all on public.properties, public.activity_events,
   public.owner_devices, public.owner_preferences from anon, authenticated;
-grant select, insert, update on public.properties to authenticated;
+grant select on public.properties to authenticated;
+-- Do not allow clients to self-verify domains or write verified_at.
+grant insert (owner_id, name, address, location, host, state) on public.properties to authenticated;
+grant update (name, address, location, state) on public.properties to authenticated;
 grant select, update(seen_at) on public.activity_events to authenticated;
 grant select, insert, update, delete on public.owner_devices to authenticated;
 grant select, insert, update on public.owner_preferences to authenticated;
