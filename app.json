@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Utah Sands Manager",
+    "slug": "utah-sands-manager",
+    "scheme": "utahsandsmanager",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": { "supportsTablet": true, "bundleIdentifier": "com.utahsands.manager" },
+    "android": { "package": "com.utahsands.manager" },
+    "extra": { "mode": "demo", "note": "No live backend or payment handling is configured" }
+  }
+}
