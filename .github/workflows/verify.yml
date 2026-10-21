@@ -1,0 +1,29 @@
+name: Verify owner app
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  app-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno check --no-config supabase/functions/submit-site-request/index.ts
+      - run: deno check --no-config supabase/functions/stripe-rent-webhook/index.ts
+      - run: deno check --no-config supabase/functions/inbound-email/index.ts
+      - run: deno check --no-config cloudflare/email-bridge.ts

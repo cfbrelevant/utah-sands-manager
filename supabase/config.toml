@@ -1,0 +1,10 @@
+[functions.submit-site-request]
+verify_jwt = false
+
+[functions.inbound-email]
+# Cloudflare Worker signs metadata; no owner JWT sent by webhook.
+verify_jwt = false
+
+[functions.stripe-rent-webhook]
+# Stripe supplies a signed webhook, not a Supabase JWT.
+verify_jwt = false
