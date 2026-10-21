@@ -1,4 +1,4 @@
-import type { RequestKind } from './requests';
+type RequestKind = 'inquiry' | 'maintenance';
 
 export type OwnerPushMessage = {
   to: string;
