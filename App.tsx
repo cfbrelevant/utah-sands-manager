@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  SafeAreaView, StatusBar, View, Text, ScrollView, Pressable,
+  SafeAreaView, StatusBar, View, Text, ScrollView, Pressable, ActivityIndicator,
   TextInput, StyleSheet, Platform, KeyboardAvoidingView
 } from 'react-native';
 import {
@@ -8,6 +8,8 @@ import {
   activitiesFor, attentionCount, unseenCount, formatUSD, sumRecordedPayments
 } from './src/domain';
 import { ORIGINAL_PROPERTY, SAMPLE_EVENTS } from './src/sample';
+import type { Session } from '@supabase/supabase-js';
+import { supabase, backendConfigured, loadOwnerData, markEventSeen, addOwnedProperty, savePreferences } from './src/backend';
 
 type Tab = 'Home' | 'Activity' | 'Properties' | 'Settings';
 const INK = '#26342F';
@@ -71,8 +73,14 @@ function ActivityRow({ event, name, onRead }: { event: Activity; name: string; o
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('Home');
-  const [properties, setProperties] = useState<Property[]>([ORIGINAL_PROPERTY]);
-  const [events, setEvents] = useState<Activity[]>(SAMPLE_EVENTS);
+  const [session, setSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(!backendConfigured);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [properties, setProperties] = useState<Property[]>(backendConfigured ? [] : [ORIGINAL_PROPERTY]);
+  const [events, setEvents] = useState<Activity[]>(backendConfigured ? [] : SAMPLE_EVENTS);
   const [propertyScope, setPropertyScope] = useState('all');
   const [filter, setFilter] = useState<KindFilter>('all');
   const [showAdd, setShowAdd] = useState(false);
@@ -82,6 +90,51 @@ export default function App() {
   const [inputError, setInputError] = useState('');
   const [notices, setNotices] = useState({ payment: true, message: true, maintenance: true, inspection: false });
   const [toast, setToast] = useState('');
+
+  useEffect(() => {
+    if (!supabase) return;
+    let active = true;
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (!active) return;
+      if (error) setAuthError(error.message);
+      setSession(data.session);
+      setAuthReady(true);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => {
+      if (active) { setSession(next); setAuthReady(true); }
+    });
+    return () => { active = false; listener.subscription.unsubscribe(); };
+  }, []);
+
+  async function refreshOwner() {
+    if (!backendConfigured || !session?.user.id) return;
+    try {
+      const next = await loadOwnerData(session.user.id);
+      setProperties(next.properties);
+      setEvents(next.events);
+      setPropertyScope(old => (old === 'all' || next.properties.some(p => p.id === old)) ? old : 'all');
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : 'Could not load owner data.');
+    }
+  }
+
+  useEffect(() => {
+    if (session?.user.id) void refreshOwner();
+    else if (backendConfigured) { setProperties([]); setEvents([]); }
+  }, [session?.user.id]);
+
+  async function signIn() {
+    if (!supabase) return;
+    setAuthBusy(true); setAuthError('');
+    try {
+      const result = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (result.error) throw result.error;
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Could not sign in.');
+    } finally {
+      setAuthBusy(false); setPassword('');
+    }
+  }
 
   const selected = properties.find(p => p.id === propertyScope);
   const scopeName = selected?.name ?? 'All properties';
@@ -121,6 +174,27 @@ export default function App() {
     setFilter('all');
     setTab('Home');
   }
+
+  if (!authReady) return <View style={styles.centered}><ActivityIndicator size="large" color={GREEN} /></View>;
+  if (backendConfigured && !session) return <SafeAreaView style={styles.safe}>
+    <StatusBar barStyle="dark-content" />
+    <View style={styles.loginScreen}>
+      <Text style={styles.wordmark}>UTAH SANDS</Text>
+      <Text style={styles.brandSub}>PRIVATE OWNER ACCESS</Text>
+      <Text style={[styles.pageTitle, { marginTop: 48 }]}>Sign in</Text>
+      <Text style={[styles.subheading, { marginBottom: 18 }]}>For verified property owners only. Tenant accounts are not available in this app.</Text>
+      <TextInput style={styles.input} placeholder="Email" keyboardType="email-address"
+        autoCapitalize="none" autoComplete="email" value={email} onChangeText={setEmail} />
+      <TextInput style={styles.input} placeholder="Password" secureTextEntry value={password}
+        autoComplete="password" onChangeText={setPassword} />
+      {authError ? <Text style={styles.errorText}>{authError}</Text> : null}
+      <Pressable disabled={authBusy || !email.trim() || !password} onPress={() => void signIn()}
+        style={[styles.primaryButton, authBusy && { opacity: 0.5 }]}>
+        <Text style={styles.primaryButtonText}>{authBusy ? 'Signing in…' : 'Sign in securely'}</Text>
+      </Pressable>
+      <Text style={styles.note}>Your owner account must first be created in Supabase. No public sign-up is offered.</Text>
+    </View>
+  </SafeAreaView>;
 
   return <SafeAreaView style={styles.safe}>
     <StatusBar barStyle="dark-content" backgroundColor={PAPER} />
@@ -317,6 +391,8 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: PAPER },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: PAPER },
+  loginScreen: { flex: 1, padding: 24, backgroundColor: LIGHT, justifyContent: 'center' },
   topBar: { height: 76, paddingHorizontal: 22, borderBottomColor: LINE, borderBottomWidth: 1,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   wordmark: { color: INK, fontSize: 17, fontWeight: '800', letterSpacing: 2.6 },
