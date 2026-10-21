@@ -9,7 +9,8 @@ import {
 } from './src/domain';
 import { ORIGINAL_PROPERTY, SAMPLE_EVENTS } from './src/sample';
 import type { Session } from '@supabase/supabase-js';
-import { supabase, backendConfigured, loadOwnerData, markEventSeen, addOwnedProperty, savePreferences } from './src/backend';
+import { supabase, backendConfigured, loadOwnerData, markEventSeen, addOwnedProperty, savePreferences, loadPreferences } from './src/backend';
+import { registerOwnerDevice } from './src/push';
 
 type Tab = 'Home' | 'Activity' | 'Properties' | 'Settings';
 const INK = '#26342F';
@@ -79,6 +80,8 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushStatus, setPushStatus] = useState('Not registered');
   const [properties, setProperties] = useState<Property[]>(backendConfigured ? [] : [ORIGINAL_PROPERTY]);
   const [events, setEvents] = useState<Activity[]>(backendConfigured ? [] : SAMPLE_EVENTS);
   const [propertyScope, setPropertyScope] = useState('all');
@@ -119,8 +122,11 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (session?.user.id) void refreshOwner();
-    else if (backendConfigured) { setProperties([]); setEvents([]); }
+    if (session?.user.id) {
+      void refreshOwner();
+      void loadPreferences(session.user.id).then(setNotices)
+        .catch(error => setToast(String(error)));
+    } else if (backendConfigured) { setProperties([]); setEvents([]); }
   }, [session?.user.id]);
 
   async function signIn() {
@@ -270,7 +276,7 @@ export default function App() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.propertyName}>{p.name}</Text>
                 <Text style={styles.propertyAddress}>{p.address}</Text>
-                <Text style={styles.propertyHost}>{p.host} · {p.state === 'planned' ? 'planned' : 'preview'}</Text>
+                <Text style={styles.propertyHost}>{p.host} · {p.state}</Text>
               </View>
               <Text style={styles.chevron}>›</Text>
             </Pressable>
@@ -382,7 +388,7 @@ export default function App() {
               ['Email inbox', 'Not connected'],
               ['Resident requests', 'Demo pages only'],
               ['Owner account', backendConfigured ? 'Signed in' : 'Not configured'],
-              ['Mobile push', 'Not enabled']
+              ['Mobile push', pushStatus]
             ].map(([title, sub], i) =>
               <View key={title} style={[styles.connectionRow, i > 0 && { borderTopWidth: 1, borderTopColor: LINE }]}>
                 <Text style={styles.connectionTitle}>{title}</Text>
@@ -391,6 +397,17 @@ export default function App() {
             )}
           </View>
           <Text style={styles.note}>Never enter bank/card details in this app. Actual payments must go through a verified provider.</Text>
+          {backendConfigured && session?.user.id ? <Pressable disabled={pushBusy}
+            onPress={() => {
+              setPushBusy(true);
+              void registerOwnerDevice(session.user.id).then(() => {
+                setPushStatus('Device registered · delivery server pending');
+                setToast('This device is registered. Live push delivery still requires server setup.');
+              }).catch(error => setToast(error instanceof Error ? error.message : String(error)))
+                .finally(() => setPushBusy(false));
+            }} style={[styles.primaryButton, pushBusy && { opacity: 0.5 }]}>
+            <Text style={styles.primaryButtonText}>{pushBusy ? 'Registering…' : 'Register phone for alerts'}</Text>
+          </Pressable> : null}
           {backendConfigured ? <Pressable onPress={() => void supabase?.auth.signOut()} style={styles.primaryButton}>
             <Text style={styles.primaryButtonText}>Sign out</Text>
           </Pressable> : null}
