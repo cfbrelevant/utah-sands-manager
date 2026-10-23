@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#102d3f" /><meta name="description" content="Weather for temples, weddings, mission cities and places in Church history." />
+<title>Mormon Weather — The forecast for places that matter</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,0,0;9..144,600,0,0&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css"><script defer src="locations.js"></script><script defer src="script.js"></script>
+</head>
+<body>
+<div class="app-shell">
+<header class="topbar">
+  <a class="brand" href="#home" aria-label="Mormon Weather home"><span class="brand-mark" aria-hidden="true">☀</span><span>Mormon<span class="brand-light">Weather</span></span></a>
+  <div class="top-actions"><a class="rental-back" href="https://utahsands.com/" title="Return to Utah Sands rental website">← Utah Sands</a><span class="mini-descriptor">Forecasts for meaningful places</span><button id="savedToggle" class="text-btn" type="button">☆ Saved <span id="savedCount">0</span></button></div>
+</header>
+<main id="home">
+  <section class="hero">
+    <div class="hero-decor" aria-hidden="true"><span class="sun-glow"></span><span class="hero-mountain back"></span><span class="hero-mountain front"></span></div>
+    <div class="hero-content"><div class="eyebrow">LOCAL SKIES · SACRED PLACES</div><h1>The forecast for<br><em>places that matter.</em></h1><p>From temple wedding photos to a missionary halfway around the world, check the weather wherever your heart is.</p>
+      <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a temple, city or historic site..." aria-label="Search places"><kbd>/</kbd></div>
+      <div class="hero-tags"><button data-quick="Temples">⛪ Temples</button><button data-quick="History">⌁ Church history</button><button data-quick="Mission Cities">◎ Mission cities</button></div>
+    </div>
+    <div class="hero-note" aria-hidden="true"><span>YOUR WEATHER, WHEREVER FAITH TAKES YOU</span><span>↗</span></div>
+  </section>
+  <section class="content-area">
+    <div class="location-head"><div><div class="section-kicker">EXPLORE THE FORECAST</div><h2>Find your place <span class="muted-title">↗</span></h2></div><p>Live conditions and a 16-day outlook, where available.</p></div>
+    <nav class="tabs" aria-label="Location categories"><button class="active" data-cat="All">All places</button><button data-cat="Temples">Temples</button><button data-cat="History">Church history</button><button data-cat="Pioneer Trail">Pioneer trail</button><button data-cat="Mission Cities">Mission cities</button></nav>
+    <div class="main-grid"><div>
+      <div id="placesList" class="places-list" aria-live="polite"></div>
+      <div id="emptyState" class="empty hidden"><span>⌕</span><strong>No matching places in our starter directory.</strong><p>Or search a city worldwide instead:</p><button id="searchCityBtn" class="primary-btn">Look up this city</button></div>
+      <div class="pagination"><button id="loadMore" class="outline-btn">Show more places ↓</button></div>
+    </div><aside class="detail-column">
+      <div id="forecastCard" class="forecast-card"><div class="card-loading">Select a place to see its live weather.</div></div>
+      <div class="wedding-promo"><div class="promo-icon">✧</div><div><strong>Planning a temple wedding?</strong><p>See the forecast for your date, daylight hours, and outdoor photo conditions.</p></div><button id="openPlanner" class="promo-button">Plan your day →</button></div>
+    </aside></div>
+  </section>
+  <section id="planner" class="planner-section"><div class="planner-inner"><div><div class="section-kicker light">MADE FOR YOUR BIG DAY</div><h2>A little extra peace<br>before <em>“I do.”</em></h2><p>Select your temple and wedding date for a personalized weather outlook. For dates beyond the forecast range, we’ll tell you when to check back rather than guess.</p></div><div class="planner-panel"><label for="templeSelect">YOUR TEMPLE</label><select id="templeSelect"></select><label for="weddingDate">YOUR WEDDING DATE</label><input type="date" id="weddingDate" /><button class="primary-btn" id="checkWedding">Check wedding weather ↗</button><div id="weddingResult" role="status" class="planner-result">Choose a date to plan your temple photos.</div></div></div></section>
+</main>
+<footer><span class="footer-brand">☀ MormonWeather</span><p>Independent project · Not affiliated with The Church of Jesus Christ of Latter-day Saints.</p><p>Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0). <a href="https://www.churchofjesuschrist.org/temples/list?lang=eng" target="_blank" rel="noopener">Official temple directory</a>. Forecasts are estimates; confirm temple schedules separately.</p></footer>
+</div>
+</body></html>
