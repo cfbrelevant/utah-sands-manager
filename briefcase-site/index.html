@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#060d14">
+  <meta name="description" content="Briefcase — an interactive command center for your AI coding projects.">
+  <title>Briefcase — Your AI Mission Control</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <style>
+    :root{--bg:#070d12;--panel:#101e25;--panel2:#10262d;--border:#29404a;--muted:#a0b3bb;--text:#f5f4f0;--gold:#edb764;--blue:#27aafa;--red:#ff7656;--green:#6de5b4;color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Arial,sans-serif}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--text);background:radial-gradient(ellipse 1000px 500px at 50% 5%,#112c32 0%,#061016 80%);min-height:100vh}
+    button,input,textarea,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #9cf0e2;outline-offset:4px}button:disabled{opacity:.5;cursor:not-allowed}
+    .frame{max-width:1280px;margin:0 auto;padding:0 clamp(17px,3vw,36px)}.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:17px;padding-bottom:16px;border-bottom:1px solid #ffffff14}
+    .wordmark{font-family:Georgia,serif;font-size:clamp(24px,3vw,33px);font-weight:700;letter-spacing:-.045em;white-space:nowrap}.brief-emoji{font:26px/1 sans-serif;vertical-align:1px;margin-right:7px}.topright{display:flex;align-items:center;gap:12px}.livebadge{border:1px solid #4d7d72;background:#0d2b28;border-radius:80px;color:#a2e2c9;padding:7px 10px;font-size:11px;font-weight:750;letter-spacing:.08em}.livebadge::before{content:"";display:inline-block;background:#65e9b4;width:7px;height:7px;border-radius:50%;margin-right:6px;box-shadow:0 0 10px #65e9b4}
+    .topnav{display:flex;align-items:center;gap:18px}.topnav button{background:transparent;color:#c3ccd0;border:0;padding:8px 2px}.topnav button:hover{color:white}
+    .hero{position:relative;overflow:hidden;background:linear-gradient(110deg,#050c11 10%,#0a1619 50%,#060b0e);border-bottom:1px solid #32454b;border-radius:0 0 20px 20px;min-height:580px}
+    .hero-glow{position:absolute;inset:0;background:radial-gradient(ellipse 400px 200px at 60% 40%,#164b483e,transparent),linear-gradient(90deg,#050c11 0%,transparent 55%);pointer-events:none}
+    .hero-figure{position:absolute;right:0;top:0;width:68%;height:505px;object-fit:cover;object-position:center top;filter:saturate(.95);mask-image:linear-gradient(90deg,transparent 0%,black 18%,black 100%);opacity:.97}
+    .hero-inner{position:relative;padding-top:30px;display:grid;grid-template-columns:42% 58%;min-height:418px}
+    .hero-copy{position:relative;z-index:2;padding-top:38px;pointer-events:none}.overline{color:#f0bd72;font-weight:800;font-size:10px;letter-spacing:.21em;text-transform:uppercase;display:block;margin-bottom:17px}
+    h1{font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:clamp(43px,5vw,74px);line-height:1.03;letter-spacing:-.055em;margin:0 0 15px;text-shadow:0 3px 12px #0009}
+    .hero-description{font-size:clamp(14px,1.7vw,18px);line-height:1.55;color:#b7c4c7;max-width:360px;margin:0}.hero-callout{margin-top:22px;color:#f3d59e;font-size:12px;line-height:1.5;max-width:330px}
+    .hero-quote{position:absolute;right:0;top:18px;z-index:1;font-family:Georgia,serif;font-style:italic;color:#d6dddbb0;font-size:clamp(13px,1.5vw,19px);line-height:1.5;text-align:right;text-shadow:0 2px 8px #000;max-width:260px}
+    .mission{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:840px;margin:-12px auto 30px}
+    .ai-choice{padding:15px 14px 13px;border:1px solid #ffffff2e;border-radius:19px;background:#071018d9;box-shadow:0 14px 30px #0007;backdrop-filter:blur(12px)}.ai-choice.chatgpt{border-color:#368fbb80}.ai-choice.claude{border-color:#de7b5170}
+    .launch{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:70px;border-radius:15px;color:#fff;border:1px solid #62bfff;background:linear-gradient(180deg,#083866,#061e40);box-shadow:0 0 24px #119afa50,inset 0 1px 1px #ffffff25;font-weight:750;font-size:clamp(17px,2vw,21px);text-align:left;transition:transform .12s,filter .12s}.launch:hover{filter:brightness(1.2)}.launch:active{transform:translateY(2px)}.claude .launch{border-color:#ff9e67;background:linear-gradient(180deg,#72240f,#421208);box-shadow:0 0 24px #f56e3840,inset 0 1px 1px #ffffff25}.ai-symbol{width:33px;height:33px;flex-shrink:0;display:grid;place-items:center}.ai-symbol img{max-width:100%;max-height:100%}.ai-symbol .mark{font-size:28px;font-weight:750;line-height:1}
+    .subline{color:#adc0c8;font-size:11px;text-align:center;margin:12px 0 8px}.modes{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}.mode{background:#172934;color:#bacbd2;border:1px solid #39515e;border-radius:999px;min-height:34px;padding:7px 10px;font-size:12px;font-weight:650;white-space:nowrap;transition:background .1s}.mode[aria-pressed="true"]{background:#d7eef5;color:#092936;border-color:#b3d8e6}.claude .mode[aria-pressed="true"]{background:#ffe2cb;color:#4b210c;border-color:#ffb987}
+    .tip{font-size:11px;color:#99abb0;text-align:center;line-height:1.45;margin:12px auto 0;max-width:360px}
+    .lower{padding-top:25px;padding-bottom:80px}.section-title{font-family:Georgia,serif;font-size:clamp(26px,3vw,36px);font-weight:500;letter-spacing:-.025em;margin:0}.intro{color:#9dabb1;margin:8px 0 20px;font-size:14px}.sectionline{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}.control{border-radius:12px;background:#183039;border:1px solid #40616c;color:#dce8e8;padding:11px 13px;font-weight:650;font-size:13px}.control:hover{background:#284450}.control.gold{background:linear-gradient(#f9d28b,#e3ae58);border-color:#ffe0a7;color:#241b12}
+    .chosen{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;border:1px solid #6588a0;border-radius:18px;background:linear-gradient(120deg,#0e2532,#0b1a22);padding:15px;margin-bottom:18px;box-shadow:0 0 0 1px #1e4c5866}.chosen-title{color:#80c3e8;text-transform:uppercase;font-size:10px;font-weight:800;letter-spacing:.12em;margin-bottom:5px}.chosen h3{margin:0 0 4px;font-size:20px}.chosen p{margin:0;color:#9db4bd;font-size:12px}.chosen .change{background:#133849;color:#abe5ff;border:1px solid #366c8a;border-radius:10px;padding:11px 13px;font-weight:700;font-size:12px}
+    .proj-logo{width:60px;height:60px;border-radius:14px;background:radial-gradient(circle at 70% 20%,#488ac3,#113367 75%);border:1px solid #4684b1;display:grid;place-items:center;overflow:hidden;position:relative;box-shadow:inset 0 0 18px #1d63a640}.proj-logo img{width:100%;height:100%;object-fit:cover;position:relative;z-index:2}.proj-logo .fallback{font-weight:950;text-align:center;font-size:12px;line-height:1.05;color:#e4f8ff}.proj-logo .football{font-size:18px;display:block;margin-bottom:1px}
+    .projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.project-card{position:relative;background:linear-gradient(135deg,#10212a,#0b171d);border:1px solid #2b454f;border-radius:17px;padding:17px;min-width:0;text-align:left;color:inherit;min-height:178px;display:flex;flex-direction:column;gap:12px;transition:transform .12s,border-color .12s}.project-card:hover{transform:translateY(-2px);border-color:#79c3de}.project-card.selected{border-color:#9bdcf5;box-shadow:0 0 0 1px #64b9d875,0 0 24px #15a9ce18}.project-head{display:flex;gap:12px;align-items:center}.project-head .proj-logo{width:46px;height:46px;border-radius:12px;flex-shrink:0}.project-head .fallback{font-size:9px}.project-head .football{font-size:14px}.project-title{font-size:16px;font-weight:750;line-height:1.15}.project-desc{color:#9cafb5;font-size:12px;line-height:1.5;flex:1}.project-foot{display:flex;justify-content:space-between;align-items:center;color:#8eb2bd;font-size:11px}.project-foot b{font-size:12px;color:#f0c788}.statusdot{width:8px;height:8px;background:#85d5aa;display:inline-block;border-radius:50%;margin-right:6px}.statline{display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;border-top:1px solid #2b3b40;padding-top:19px;gap:10px;color:#9aabb0;font-size:12px}.statline span strong{color:#e5f0ef}
+    .workarea{margin-top:29px;border:1px solid #314951;border-radius:17px;background:#09171d;padding:18px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}.workarea h3{margin:0 0 5px;font-size:16px}.workarea p{margin:0;color:#93a9b0;font-size:12px;line-height:1.5}
+    .footnote{color:#7e969b;font-size:12px;margin-top:23px;line-height:1.6}.footnote a{color:#a9d5e6}
+    .modal{position:fixed;inset:0;z-index:50;background:#010608d9;display:grid;place-items:center;padding:15px;backdrop-filter:blur(5px)}.modal[hidden]{display:none}.sheet{background:#10212a;border:1px solid #527381;width:min(550px,100%);max-height:calc(100vh - 32px);overflow:auto;border-radius:20px;padding:20px;box-shadow:0 20px 90px #000a}.sheet-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.sheet h2{font-family:Georgia,serif;font-weight:500;margin:0 0 16px;font-size:27px}.x{background:#2c414b;color:#e9f4f1;border:0;border-radius:10px;width:38px;height:38px;font-size:25px}.field{display:block;font-size:12px;font-weight:700;color:#b6ced4;margin:13px 0}.field input,.field textarea,.field select{margin-top:6px;background:#0a161c;border:1px solid #44616c;color:#fff;padding:11px 12px;border-radius:10px;display:block;width:100%}.field textarea{min-height:78px;resize:vertical}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.muted{font-size:11px;color:#8aa0a8;line-height:1.5}
+    .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);max-width:92vw;background:#d5f6e8;color:#102820;border-radius:14px;z-index:60;padding:13px 18px;font-weight:800;font-size:12px;box-shadow:0 10px 40px #0008;white-space:normal}
+
+    .council-connector{max-width:710px;height:54px;margin:-2px auto 0;overflow:hidden}.council-connector svg{display:block;width:100%;height:54px;filter:drop-shadow(0 0 9px #30a8bf77)}
+    .council-actions{display:flex;justify-content:center;align-items:stretch;gap:10px;max-width:620px;margin:0 auto}.council-button{display:flex;align-items:center;justify-content:space-around;gap:12px;background:linear-gradient(135deg,#204c58,#123b4b);border:1px solid #75ced3;border-radius:19px;min-height:74px;flex:1;color:#ecfbff;padding:12px 16px;text-align:left;box-shadow:0 0 28px #27b0ca23}.council-button strong{font-size:16px;display:block}.council-button small{display:block;font-size:11px;color:#b3d8df;margin-top:4px}.council-button:hover{filter:brightness(1.17)}.council-emoji{font-size:26px}.council-all{border-radius:19px;padding:10px 16px;border:1px solid #e7ba6a;background:linear-gradient(150deg,#f3cd83,#e2a24a);color:#211b12;font-weight:800;min-width:130px;box-shadow:0 9px 30px #e0ac5420}.council-quip{text-align:center;font-family:Georgia,serif;font-style:italic;color:#d5b277;font-size:12px;margin:13px 0 3px}
+    .council-sheet{width:min(740px,100%)}.council-status{background:#0b3039;border:1px solid #2d6a71;border-radius:11px;padding:10px 12px;font-size:12px;color:#b7e7ec;font-weight:800}.dot{display:inline-block;background:#6ce6b0;height:8px;width:8px;border-radius:50%;margin-right:6px}.two-agents{display:grid;grid-template-columns:1fr 1fr;gap:12px}.council-assignments{display:grid;gap:10px;margin:18px 0}.assign-card{background:#0a1a22;border:1px solid #486773;border-radius:13px;padding:13px}.assign-title{font-weight:800;font-size:15px}.assign-note{color:#a3bec4;font-size:12px;line-height:1.5;margin:6px 0 10px}.assign-card button{margin-right:8px;margin-bottom:3px}.relay{border-top:1px solid #37525e;padding-top:15px;margin-top:8px}.relay h3{font-family:Georgia,serif;font-weight:500;margin:0 0 7px}.transcript{margin:12px 0;display:grid;gap:8px}.transcript-entry{padding:9px 11px;border-radius:9px;background:#0d2631;color:#cde2e9;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}.council-button:focus-visible,.council-all:focus-visible{outline:3px solid #fff1b0;outline-offset:3px}
+    @media(max-width:540px){.council-connector{height:37px}.council-connector svg{height:37px}.council-actions{gap:8px}.council-button{padding:10px;min-height:69px;border-radius:15px}.council-button strong{font-size:13px}.council-button small{font-size:10px}.council-emoji{font-size:19px}.council-all{min-width:111px;border-radius:15px;padding:8px;font-size:12px}.two-agents{grid-template-columns:1fr}.council-quip{font-size:11px}}
+    @media(max-width:780px){.topnav{display:none}.hero{min-height:0}.hero-figure{width:100%;height:365px;top:70px;right:0;object-position:center 12%;mask-image:linear-gradient(180deg,#000 55%,transparent 100%);opacity:.95}.hero-glow{background:linear-gradient(180deg,#07101644 0%,#07101611 46%,#071016 86%)}.hero-inner{min-height:555px;display:block;padding-top:24px}.hero-copy{padding-top:0}.hero-copy h1{font-size:clamp(40px,11vw,68px);max-width:270px;text-shadow:0 4px 14px #001a}.hero-description{font-size:14px;max-width:205px}.hero-quote{display:none}.overline{font-size:9px;max-width:260px;margin-bottom:9px}.hero-callout{position:absolute;top:450px;left:0;margin:0;font-size:11px;max-width:330px}.mission{margin:-16px 0 18px;gap:9px}.ai-choice{padding:9px 8px}.launch{min-height:65px;font-size:14px;gap:6px;padding:6px}.ai-symbol{width:23px;height:23px}.ai-symbol .mark{font-size:22px}.subline{font-size:10px}.mode{font-size:10px;min-height:30px;padding:6px 8px}.projects-grid{grid-template-columns:repeat(2,1fr)}.hero-copy:after{content:"";position:absolute;top:0;left:-24px;width:100%;height:240px;background:linear-gradient(90deg,#071016ab,transparent);z-index:-1}.hero{border-radius:0 0 17px 17px}.workarea{grid-template-columns:1fr}.chosen{grid-template-columns:auto 1fr}.chosen .change{grid-column:1/-1}.statline{flex-wrap:wrap}.lower{padding-top:20px}}
+    @media(max-width:420px){.topbar{padding:12px 0}.wordmark{font-size:26px}.hero-figure{top:86px;height:335px}.hero-inner{min-height:510px}.hero-copy h1{font-size:45px;max-width:230px}.hero-description{font-size:13px;max-width:188px}.hero-callout{top:419px}.ai-choice{border-radius:14px}.launch{border-radius:12px;font-size:13px}.modes{gap:4px}.mode{font-size:9px;padding:6px 6px}.projects-grid{grid-template-columns:1fr 1fr;gap:9px}.project-card{padding:13px;min-height:171px}.project-head{align-items:flex-start;flex-direction:column}.project-title{font-size:14px}.project-desc{font-size:11px}}
+    @media(max-width:335px){.projects-grid{grid-template-columns:1fr}.hero-copy h1{font-size:40px}.hero-inner{min-height:485px}.hero-callout{top:405px}.mission{gap:6px}.mode{font-size:9px;padding:6px 5px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <header class="frame topbar"><div class="wordmark"><span class="brief-emoji">💼</span>Briefcase</div><nav class="topnav" aria-label="Main"><button type="button" data-scroll="projects">Projects</button><button type="button" data-scroll="assignment">AI handoff</button><button type="button" id="topBackup">Backup</button></nav><div class="topright"><span class="livebadge">PUBLIC DEMO</span></div></header>
+  <section class="hero"><img class="hero-figure" src="hero-chair.webp" alt="Mysterious mentor in a red leather chair, offering two choices" fetchpriority="high"><div class="hero-glow"></div>
+  <div class="frame hero-inner"><div class="hero-copy"><span class="overline">The choice is yours · AI mission control</span><h1>One choice.<br>Real progress.</h1><p class="hero-description">Pick your project. Choose your AI. Give it a mission.</p><p class="hero-callout">✦ Big buttons prepare your assignment and open the AI. You still review and send it yourself.</p></div><div class="hero-quote">“Same project.<br>Different perspective.<br>You decide.”</div></div>
+  <div class="frame"><div class="mission" id="assignment">
+    <div class="ai-choice chatgpt"><button type="button" id="sendOpenAI" class="launch"><span class="ai-symbol"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.6c2.2-1.3 5 0 5.4 2.5 2.5.1 4.3 2.6 3.2 5 1.7 1.9 1.1 5-1.4 6-1.1 2.3-4.1 3.4-6.2 2.1-2.2 1.3-5 .1-5.4-2.4-2.5-.1-4.3-2.6-3.2-5-1.7-1.9-1.1-5 1.4-6 1.1-2.3 4.1-3.4 6.2-2.1Z"/><path d="m7.4 8.3 5-3 5 3.1v6l-5 3-5-3V8.3Zm-3 4 8 4.7m-4.7-9 8 4.7"/></svg></span><span>Send to<br><strong id="openaiName">ChatGPT</strong></span><span aria-hidden="true">→</span></button><div class="subline">Which ChatGPT experience?</div><div class="modes" id="openaiModes" role="group" aria-label="ChatGPT experience"><button class="mode" data-mode="chat" aria-pressed="true">Chat</button><button class="mode" data-mode="work" aria-pressed="false">Workflows</button><button class="mode" data-mode="codex" aria-pressed="false">Codex</button></div></div>
+    <div class="ai-choice claude"><button type="button" id="sendClaude" class="launch"><span class="ai-symbol"><span class="mark" aria-hidden="true">✳</span></span><span>Send to<br><strong id="claudeName">Claude</strong></span><span aria-hidden="true">→</span></button><div class="subline">Which Claude experience?</div><div class="modes" id="claudeModes" role="group" aria-label="Claude experience"><button class="mode" data-mode="chat" aria-pressed="true">Chat</button><button class="mode" data-mode="projects" aria-pressed="false">Projects</button><button class="mode" data-mode="code" aria-pressed="false">Code</button></div></div>
+  </div>
+  <div class="council-connector" aria-hidden="true"><svg viewBox="0 0 600 62" preserveAspectRatio="none"><path d="M148 0V17Q148 30 180 30H300M452 0V17Q452 30 420 30H300V60" stroke="#5bcadd" stroke-width="2" fill="none" stroke-dasharray="7 5"/><circle cx="300" cy="30" r="6" fill="#f2c27b"/></svg></div>
+  <div class="council-actions"><button type="button" class="council-button" id="openCouncil"><span class="council-emoji">🔗</span><span><strong>Make them collaborate</strong><small>Choose two AIs · divide the work</small></span><span aria-hidden="true">→</span></button><button type="button" class="council-all" id="useThemAll">⚡ Use Them All</button></div>
+  <p class="council-quip">“I can show you the door. The AIs still have to walk through it.”</p>
+  <p class="tip">ChatGPT and Claude buttons open your chosen AI and copy a prepared mission. Collaboration currently uses copy-and-relay; unattended AI-to-AI messaging needs secure APIs.</p></div>
+  </section>
+  <main class="frame lower"><section id="projects"><div class="sectionline"><div><h2 class="section-title">Your projects</h2><p class="intro">Choose which project Morpheus should hand to your AI.</p></div><button class="control gold" type="button" id="newProject">＋ New project</button></div><div class="chosen" id="chosen"></div><div class="projects-grid" id="cards"></div><div class="statline"><span><strong id="total">3</strong> projects · saved on this device</span><span>Designed for human + AI teamwork</span></div></section>
+    <section class="workarea"><div><h3>Keep your next move clear.</h3><p>Copy a structured project handoff, or back up your local project list. No account required for this demo.</p></div><div class="actions"><button class="control" id="copyHandoff" type="button">📋 Copy handoff</button><button class="control" id="backup" type="button">↓ Backup</button><button class="control" id="restore" type="button">↑ Restore</button><input type="file" id="restoreFile" accept=".json,application/json" hidden></div></section>
+    <p class="footnote">Privacy: This is a public demo with sample data and a selectable CFB Relevant project. You decide what to enter. Edits stay in this browser's local storage, not on a server. AI buttons copy instructions; they cannot send messages automatically.</p>
+  </main>
+  <div class="modal" id="council" hidden><div class="sheet council-sheet" role="dialog" aria-modal="true" aria-labelledby="councilTitle">
+    <div class="sheet-top"><div><div class="overline" style="margin:0 0 5px">THE AI COUNCIL</div><h2 id="councilTitle">Choose your team</h2></div><button class="x" id="closeCouncil" aria-label="Close collaboration" type="button">×</button></div>
+    <div class="council-status"><span class="dot"></span><span id="councilProject">Mission: CFB Relevant</span></div>
+    <p class="muted" id="councilHelp">Pick two AIs. Give each a different job; neither can silently edit the same files.</p>
+    <div class="two-agents" id="agentSelectors">
+      <label class="field">AI 1 · The builder<select id="agentOne"><option value="openai-chat">ChatGPT Chat</option><option value="openai-work">ChatGPT Workflows</option><option value="openai-codex">Codex</option><option value="claude-chat">Claude Chat</option><option value="claude-projects">Claude Projects</option><option value="claude-code">Claude Code</option></select></label>
+      <label class="field">AI 2 · The reviewer<select id="agentTwo"><option value="claude-chat">Claude Chat</option><option value="claude-code">Claude Code</option><option value="openai-chat">ChatGPT Chat</option><option value="openai-codex">Codex</option><option value="openai-work">ChatGPT Workflows</option><option value="claude-projects">Claude Projects</option></select></label>
+    </div>
+    <label class="field">Shared mission<textarea id="councilGoal" placeholder="What should they accomplish together?">Make measurable progress on the next project task. Verify current files before changing anything.</textarea></label>
+    <div class="two-agents" id="roleSelectors"><label class="field">AI 1 responsibilities<textarea id="roleOne">Implement the smallest complete change on a separate branch. Report files, commits and tests.</textarea></label><label class="field">AI 2 responsibilities<textarea id="roleTwo">Review architecture, locate bugs, and run an independent QA checklist. Do not overwrite AI 1's files.</textarea></label></div>
+    <div class="actions"><button type="button" class="control gold" id="prepareCouncil">⚡ Prepare collaboration</button><button type="button" class="control" id="resetCouncil">Choose two</button></div>
+    <p class="muted">Each action opens the AI and copies the assignment. You paste and send it. Never assume either AI is working until it reports verified changes.</p>
+    <div id="councilAssignments" class="council-assignments" aria-live="polite"></div>
+    <div class="relay" id="relay" hidden><h3>🗣️ Let them respond to each other</h3><p class="muted">Paste one assistant's response. Briefcase will turn it into a review request for the next assistant—no imaginary conversation.</p><label class="field">Reply from<select id="replyAuthor"></select></label><label class="field">Their actual reply<textarea id="replyText" placeholder="Paste the AI's response here..."></textarea></label><button type="button" id="relayResponse" class="control">↗ Relay to the next AI</button><div class="transcript" id="transcript"></div></div>
+  </div></div>
+  <div class="modal" id="editor" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="editTitle"><div class="sheet-top"><h2 id="editTitle">Edit project</h2><button class="x" id="closeEditor" type="button" aria-label="Close">×</button></div><label class="field">Project name<input id="fieldName" maxlength="100"></label><label class="field">What are you building?<textarea id="fieldDescription"></textarea></label><label class="field">Next task<textarea id="fieldNext"></textarea></label><label class="field">GitHub repository link (optional)<input id="fieldRepo" type="url" placeholder="https://github.com/you/project"></label><label class="field">Status<select id="fieldStatus"><option>Idea</option><option>Building</option><option>Testing</option><option>Waiting</option><option>Paused</option><option>Done</option></select></label><label class="field">Project icon (optional): upload an image from your phone<input id="fieldIcon" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"></label><div class="actions"><button class="control gold" id="saveProject" type="button">Save project</button><button class="control" id="removeProject" type="button">Remove project</button></div><p class="muted">Icon uploads are stored only in your device browser; use a small icon for best performance.</p></div></div>
+  <script>
+  (()=>{'use strict';
+    const repo='https://github.com/cfbrelevant/cfb-relevant';
+    const seed=[{id:'cfb',name:'CFB Relevant',description:'College football app · find the games that matter',next:'Check the current branch and choose the next verified task.',repo:'',status:'Building',icon:'https://cfbrelevant.com/static/icon-192.png',iconLocal:'',isReal:true},{id:'aurora',name:'Aurora Studio',description:'Sample creative website project',next:'Polish the responsive homepage layout.',repo:'',status:'Testing',icon:'',iconLocal:'',isReal:false},{id:'forest',name:'Forest Quest',description:'Sample adventure game prototype',next:'Test controls and identify the next gameplay slice.',repo:'',status:'Idea',icon:'',iconLocal:'',isReal:false}];
+    const KEY='briefcase-morpheus-v1';const $=id=>document.getElementById(id);let projects;try{const v=JSON.parse(localStorage.getItem(KEY));projects=Array.isArray(v)&&v.length?v:seed}catch{projects=seed}
+    let selected=localStorage.getItem('briefcase-morpheus-selected')||'cfb';let mode={openai:'chat',claude:'chat'};let editing=null;let iconPending='';
+    const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const chosenProject=()=>projects.find(p=>p.id===selected)||projects[0]||null;
+    function persist(){try{localStorage.setItem(KEY,JSON.stringify(projects))}catch{toast('Storage full. Use a smaller icon image.')}}
+    function toast(message){document.querySelector('.toast')?.remove();const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=message;document.body.append(el);setTimeout(()=>el.remove(),3300)}
+    function logo(p){const x=document.createElement('div');x.className='proj-logo';const fallback=document.createElement('div');fallback.className='fallback';fallback.innerHTML=p.id==='cfb'?'<span class="football">🏈</span>CFB<br>RELEVANT':'<span style="font-size:19px">'+(p.id==='forest'?'🌲':'📁')+'</span>';x.append(fallback);const src=p.iconLocal||p.icon;if(src){const i=document.createElement('img');i.alt=p.name+' icon';i.loading='lazy';i.src=src;let fallbackTry=0;i.onerror=()=>{if(p.id==='cfb'&&fallbackTry++===0){i.src='https://cfbrelevant.com/favicon.ico'}else{i.remove()}};x.append(i)}return x}
+    function render(){if(!projects.some(p=>p.id===selected))selected=projects[0]?.id||'';const p=chosenProject();const pick=$('chosen');pick.replaceChildren();if(p){pick.append(logo(p));const mid=document.createElement('div');mid.innerHTML='<div class="chosen-title">Selected mission</div><h3>'+safe(p.name)+'</h3><p>'+safe(p.next||'Choose a task to work on')+'</p>';pick.append(mid);const b=document.createElement('button');b.className='change';b.textContent='Edit project ↗';b.onclick=()=>openEditor(p.id);pick.append(b)}else{pick.textContent='Add a project to begin.'}
+      const root=$('cards');root.replaceChildren();for(const item of projects){const b=document.createElement('button');b.type='button';b.className='project-card'+(item.id===selected?' selected':'');const head=document.createElement('div');head.className='project-head';head.append(logo(item));const name=document.createElement('div');name.className='project-title';name.textContent=item.name;head.append(name);const desc=document.createElement('div');desc.className='project-desc';desc.textContent=item.description||'No description yet';const foot=document.createElement('div');foot.className='project-foot';foot.innerHTML='<span><i class="statusdot"></i>'+safe(item.status||'Idea')+'</span><b>'+(item.id===selected?'Selected ✓':'Choose →')+'</b>';b.append(head,desc,foot);b.onclick=()=>{selected=item.id;localStorage.setItem('briefcase-morpheus-selected',selected);render();toast(item.name+' selected for AI assignments.')};root.append(b)}$('total').textContent=projects.length;
+    }
+    function formatPrompt(p,provider){return `BRIEFCASE — AI MISSION\nSelected project: ${p.name}\nRepository: ${p.repo||'(Not connected; ask me for repo access)'}\nStatus: ${p.status}\nProject summary: ${p.description||'(Not recorded)'}\nNext task: ${p.next||'Inspect current project state and suggest next concrete task'}\nDestination: ${provider}\n\nInstructions:\n1. Confirm the correct repository and branch before editing anything.\n2. Check the README, handoff file, recent commits and active tasks.\n3. Avoid overlapping changes with other AI assistants.\n4. Do not merge, publish, or deploy without explicit approval.\n5. Report actual changes, tests, blockers and the next concrete step.\n\nThis task was prepared in Briefcase. It was not sent automatically.`}
+    async function copy(text){try{await navigator.clipboard.writeText(text);toast('Mission copied! Paste it into the AI.') }catch{window.prompt('Copy this mission:',text)}}
+    const destinations={openai:{chat:{name:'ChatGPT Chat',url:'https://chatgpt.com/'},work:{name:'ChatGPT Work',url:'https://chatgpt.com/'},codex:{name:'Codex',url:'https://chatgpt.com/codex'}},claude:{chat:{name:'Claude Chat',url:'https://claude.ai/new'},projects:{name:'Claude Projects',url:'https://claude.ai/projects'},code:{name:'Claude Code',url:'https://claude.ai/code'}}};
+    function launch(company){const p=chosenProject();if(!p){toast('Add a project first.');return}const d=destinations[company][mode[company]];let prompt=formatPrompt(p,d.name);if(company==='openai'&&mode.openai==='work')prompt+='\n\nOpen ChatGPT, switch to Work mode if available, then paste this mission.';const w=window.open(d.url,'_blank','noopener,noreferrer');copy(prompt);if(!w)toast('Mission copied. Open '+d.name+' in another tab.')}
+    function modes(container,company){for(const b of $(container).querySelectorAll('[data-mode]')){b.onclick=()=>{mode[company]=b.dataset.mode;for(const el of $(container).querySelectorAll('[data-mode]'))el.setAttribute('aria-pressed',String(el===b));const d=destinations[company][mode[company]];toast(d.name+' selected') }}}
+    modes('openaiModes','openai');modes('claudeModes','claude');$('sendOpenAI').onclick=()=>launch('openai');$('sendClaude').onclick=()=>launch('claude');
+    // The AI Council is an honest handoff workflow. It doesn't claim to send messages or receive responses automatically.
+    const councilAgents=[
+      {id:'openai-chat',name:'ChatGPT Chat',company:'openai',mode:'chat',job:'Plan the approach and coordinate the handoff.'},
+      {id:'openai-work',name:'ChatGPT Workflows',company:'openai',mode:'work',job:'Organize the workflow and verify deliverables.'},
+      {id:'openai-codex',name:'Codex',company:'openai',mode:'codex',job:'Implement code and tests on a separate branch.'},
+      {id:'claude-chat',name:'Claude Chat',company:'claude',mode:'chat',job:'Challenge assumptions and review requirements.'},
+      {id:'claude-projects',name:'Claude Projects',company:'claude',mode:'projects',job:'Review project context and documentation.'},
+      {id:'claude-code',name:'Claude Code',company:'claude',mode:'code',job:'Audit code quality and suggest independent fixes.'}
+    ];
+    let councilAll=false;
+    let councilTeam=[];
+    let councilMessages=[];
+    const aiById=id=>councilAgents.find(a=>a.id===id);
+    const destinationFor=a=>destinations[a.company][a.mode];
+    function closeCouncil(){$('council').hidden=true;document.body.style.overflow=''}
+    function openCouncil(all=false){
+      councilAll=all;
+      councilTeam=[];
+      councilMessages=[];
+      $('councilAssignments').replaceChildren();$('transcript').replaceChildren();$('replyText').value='';$('relay').hidden=true;
+      $('agentSelectors').hidden=all;$('roleSelectors').hidden=all;
+      $('councilProject').textContent='Mission: '+(chosenProject()?.name||'Choose a project');
+      $('councilTitle').textContent=all?'The whole AI council':'Choose your two AIs';
+      $('councilHelp').textContent=all?'All six experiences get distinct roles. You still need to send each mission yourself.':'Choose any two AIs, give them different responsibilities, and relay their real replies.';
+      $('prepareCouncil').textContent=all?'⚡ Prepare all six missions':'⚡ Prepare collaboration';
+      $('council').hidden=false;document.body.style.overflow='hidden';
+      $('agentOne').value='openai-codex';$('agentTwo').value='claude-chat';
+      if(all){$('councilGoal').value=chosenProject()?.next||'Move this project forward using independent tasks and verification.'}
+    }
+    $('openCouncil').onclick=()=>openCouncil(false);
+    $('useThemAll').onclick=()=>openCouncil(true);
+    $('closeCouncil').onclick=closeCouncil;
+    $('council').onclick=e=>{if(e.target===$('council'))closeCouncil()};
+    $('resetCouncil').onclick=()=>openCouncil(false);
+    const createAssignment=(p,a,index,total,job,goal,teammates)=>`BRIEFCASE — COLLABORATION MISSION ${index+1}/${total}
+Project: ${p.name}
+Repository: ${p.repo||'(Ask owner for the verified GitHub repo; no access assumed)'}
+Shared goal: ${goal}
+You are: ${a.name}
+Your task: ${job}
+Other assigned AIs: ${teammates}
+
+COORDINATION RULES:
+1. Verify repository, current branch, and README/HANDOFF before coding.
+2. Do not edit the same files as another AI at the same time. Use an isolated branch.
+3. Do not fabricate another AI's work or claim to be in direct conversation with it.
+4. Ask the owner to relay responses through Briefcase. Your output must include a short summary for the other AI.
+5. Do not merge, publish, deploy, or claim tests passed without verification.
+6. Return: what you changed or checked, proof (files/commits/tests), a note for the other AI, and next steps.
+
+This assignment is COPY-AND-SEND. It was NOT automatically delivered.`;
+    function assignmentCard(a,job,prompt){
+      const d=destinationFor(a);
+      const el=document.createElement('article');el.className='assign-card';
+      const title=document.createElement('div');title.className='assign-title';title.textContent=a.name+'  ·  '+job;
+      const note=document.createElement('div');note.className='assign-note';note.textContent='The button opens '+d.name+' and copies its specific task.';
+      const send=document.createElement('button');send.className='control gold';send.type='button';send.textContent='Copy & open '+d.name;send.onclick=()=>{window.open(d.url,'_blank','noopener,noreferrer');copy(prompt)};
+      const cp=document.createElement('button');cp.className='control';cp.type='button';cp.textContent='Copy only';cp.onclick=()=>copy(prompt);
+      el.append(title,note,send,cp);return el;
+    }
+    $('prepareCouncil').onclick=()=>{
+      const p=chosenProject();if(!p){toast('Select a project first.');return}
+      const goal=$('councilGoal').value.trim();if(!goal){toast('Write a shared mission.');return}
+      councilTeam=councilAll?councilAgents.map(a=>({...a,role:a.job})):[
+        {...aiById($('agentOne').value),role:$('roleOne').value.trim()},
+        {...aiById($('agentTwo').value),role:$('roleTwo').value.trim()}
+      ];
+      if(!councilAll&&councilTeam[0].id===councilTeam[1].id){toast('Choose two different AI experiences.');return}
+      if(councilTeam.some(a=>!a.role)){toast('Assign each AI a job.');return}
+      councilMessages=[];
+      const area=$('councilAssignments');area.replaceChildren();
+      const intro=document.createElement('p');intro.className='muted';intro.textContent='Assignments ready. Send these individually, then bring real responses back here to coordinate.';area.append(intro);
+      councilTeam.forEach((a,i)=>{
+        const teammates=councilTeam.filter(x=>x.id!==a.id).map(x=>x.name+': '+x.role).join(' | ');
+        area.append(assignmentCard(a,a.role,createAssignment(p,a,i,councilTeam.length,a.role,goal,teammates)));
+      });
+      $('replyAuthor').replaceChildren();
+      councilTeam.forEach(a=>{const op=document.createElement('option');op.value=a.id;op.textContent=a.name;$('replyAuthor').append(op)});
+      $('replyText').value='';$('transcript').replaceChildren();$('relay').hidden=false;
+      toast(councilTeam.length+' assignments prepared. You choose when to send them.');
+    };
+    $('relayResponse').onclick=()=>{
+      const reply=$('replyText').value.trim();if(!reply){toast('Paste a real AI reply first.');return}
+      if(!councilTeam.length){toast('Prepare the collaboration first.');return}
+      const from=$('replyAuthor').value;const idx=councilTeam.findIndex(a=>a.id===from);if(idx<0)return;
+      const sender=councilTeam[idx],receiver=councilTeam[(idx+1)%councilTeam.length];
+      const goal=$('councilGoal').value.trim(),p=chosenProject();
+      const request=`BRIEFCASE — ACTUAL REPLY RELAY
+Project: ${p?.name||'Project'}
+Shared mission: ${goal}
+From: ${sender.name}
+To: ${receiver.name}
+
+The owner has pasted this response from ${sender.name}:
+---
+${reply}
+---
+
+Your assigned role: ${receiver.role}
+Review the reply. Identify agreements, disagreements and any unverified claims. Suggest a specific next action that avoids conflicting file edits. Return a concise handoff for ${sender.name}. Do not assume any code was actually changed unless verified.`;
+      const log=document.createElement('div');log.className='transcript-entry';log.textContent=sender.name+' → '+receiver.name+'\n'+reply.slice(0,800)+(reply.length>800?'…':'');$('transcript').prepend(log);
+      $('replyText').value='';$('replyAuthor').value=receiver.id;
+      window.open(destinationFor(receiver).url,'_blank','noopener,noreferrer');copy(request);
+    };
+    function openEditor(id){const p=projects.find(x=>x.id===id);editing=id||null;iconPending='';$('editTitle').textContent=p?'Edit '+p.name:'New project';$('fieldName').value=p?.name||'';$('fieldDescription').value=p?.description||'';$('fieldNext').value=p?.next||'';$('fieldRepo').value=p?.repo||'';$('fieldStatus').value=p?.status||'Idea';$('fieldIcon').value='';$('removeProject').style.display=p?'inline-flex':'none';$('editor').hidden=false;document.body.style.overflow='hidden'}
+    function closeEditor(){$('editor').hidden=true;document.body.style.overflow=''}
+    $('newProject').onclick=()=>openEditor(null);$('closeEditor').onclick=closeEditor;$('editor').onclick=e=>{if(e.target===$('editor'))closeEditor()};document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeEditor();closeCouncil()}});
+    $('fieldIcon').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>900000){toast('Choose an icon under 900 KB.');return}if(!/^image\/(png|jpeg|webp|svg\+xml)$/.test(f.type)){toast('Upload an image only.');return}const reader=new FileReader();reader.onload=()=>{iconPending=reader.result;toast('New icon ready to save.')};reader.readAsDataURL(f)};
+    $('saveProject').onclick=()=>{const name=$('fieldName').value.trim();if(!name){toast('Enter a project name.');return}const existing=projects.find(p=>p.id===editing);const p={id:existing?.id||'project-'+Date.now(),name,description:$('fieldDescription').value.trim(),next:$('fieldNext').value.trim(),repo:$('fieldRepo').value.trim(),status:$('fieldStatus').value,icon:existing?.icon||'',iconLocal:iconPending||existing?.iconLocal||'',isReal:existing?.isReal||false};if(existing){const i=projects.indexOf(existing);projects[i]=p}else{projects.push(p);selected=p.id}persist();closeEditor();render();toast('Project saved on this device.')};
+    $('removeProject').onclick=()=>{const p=projects.find(p=>p.id===editing);if(!p)return;if(!confirm('Remove '+p.name+' from this browser?'))return;projects=projects.filter(x=>x.id!==editing);if(selected===editing)selected=projects[0]?.id||'';persist();closeEditor();render();toast('Project removed.')};
+    $('copyHandoff').onclick=()=>{const p=chosenProject();if(p)copy(formatPrompt(p,'Choose AI later'))};
+    function backup(){const data=JSON.stringify({format:'briefcase-morpheus-v1',selected,projects},null,2);const a=document.createElement('a');const url=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.href=url;a.download='briefcase-projects-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}$('backup').onclick=backup;$('topBackup').onclick=backup;
+    $('restore').onclick=()=>$('restoreFile').click();$('restoreFile').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;const data=JSON.parse(await f.text());if(data.format!=='briefcase-morpheus-v1'||!Array.isArray(data.projects)||!data.projects.every(p=>p&&typeof p.name==='string'))throw Error('Invalid Briefcase backup');if(confirm('Replace your saved projects with this backup?')){projects=data.projects;selected=data.selected;persist();render();toast('Backup restored.')}}catch{toast('Could not restore this backup.')}e.target.value=''};
+    for(const b of document.querySelectorAll('[data-scroll]'))b.onclick=()=>document.getElementById(b.dataset.scroll)?.scrollIntoView({behavior:'smooth'});
+    render();if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  })();
+  </script>
+</body></html>
