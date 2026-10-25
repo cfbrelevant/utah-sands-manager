@@ -1,4 +1,4 @@
-const CACHE = 'mormon-weather-shell-v1';
+const CACHE = 'mormon-weather-shell-v2';
 const SHELL = ['./', './index.html', './styles.css', './script.js', './locations.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('mormon-weather-shell-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

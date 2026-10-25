@@ -36,9 +36,39 @@
     [[95,96,99],['Thunderstorms','⛈️']]
   ];
   function condition(code, isDay = true) {
-    if (code === 0 && !isDay) return ['Clear night','🌙'];
+    code = Number(code);
+    if (!isDay && code === 0) return ['Clear night','🌙'];
+    if (!isDay && code === 1) return ['Mostly clear night','🌙'];
+    if (!isDay && code === 2) return ['Partly cloudy night','☁️'];
     for (const [codes, result] of weatherTypes) if (codes.includes(Number(code))) return result;
     return ['Conditions','🌤️'];
+  }
+  function isDayAt(time, daily) {
+    const day = daily?.time?.indexOf(time.slice(0, 10)) ?? -1;
+    const sunrise = daily?.sunrise?.[day], sunset = daily?.sunset?.[day];
+    if (sunrise && sunset) return time >= sunrise && time < sunset;
+    const hour = Number(time.slice(11, 13));
+    return hour >= 6 && hour < 18;
+  }
+  function renderTrend(data, time) {
+    const points = (data.hourly?.time || []).map((t, i) => ({t, temp:Number(data.hourly.temperature_2m?.[i])}))
+      .filter(point => point.t >= time.slice(0, 13) && Number.isFinite(point.temp)).slice(0, 13);
+    if (points.length < 2) return '';
+    const values = points.map(point => point.temp);
+    const low = Math.floor(Math.min(...values)), high = Math.ceil(Math.max(...values));
+    const spread = Math.max(4, high - low);
+    const coords = points.map((point, i) => ({
+      x: Math.round(14 + i * 672 / (points.length - 1)),
+      y: Math.round(147 - (point.temp - low) * 108 / spread)
+    }));
+    const line = coords.map((point, i) => `${i ? 'L' : 'M'}${point.x} ${point.y}`).join(' ');
+    const area = `${line} L${coords.at(-1).x} 164 L${coords[0].x} 164 Z`;
+    const last = coords.at(-1);
+    return `<div class="trend-panel"><div class="trend-head"><div><span class="small-heading">TEMPERATURE TREND</span><strong>Next 12 hours</strong></div><span>${round(high)}° high · ${round(low)}° low</span></div>
+      <svg class="trend-chart" viewBox="0 0 700 180" preserveAspectRatio="none" role="img" aria-label="Temperature trend from ${esc(formatClock(points[0].t))} to ${esc(formatClock(points.at(-1).t))}">
+        <defs><linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c5f547" stop-opacity=".38"/><stop offset="100%" stop-color="#c5f547" stop-opacity="0"/></linearGradient></defs>
+        <path class="trend-grid" d="M14 164 H686 M14 100 H686 M14 38 H686"/><path d="${area}" fill="url(#trendFill)"/><path class="trend-line" d="${line}"/><circle cx="${last.x}" cy="${last.y}" r="6" fill="#b9ed36" stroke="#132322" stroke-width="3"/>
+      </svg><div class="trend-times"><span>${esc(formatClock(points[0].t))}</span><span>${esc(formatClock(points[Math.floor((points.length-1)/2)].t))}</span><span>${esc(formatClock(points.at(-1).t))}</span></div></div>`;
   }
   function kindIcon(kind) {return {Temples:'⛪',History:'📜','Pioneer Trail':'🏔️','Mission Cities':'🌎','Your Cities':'📍'}[kind] || '📍';}
   function filterPlaces() {
@@ -114,16 +144,23 @@
     const cond = condition(cur.weather_code, !!cur.is_day);
     const todayIndex = daily.time.findIndex(d => d === cur.time.split('T')[0]);
     const start = Math.max(0,todayIndex);
-    const days = daily.time.slice(start,start+6).map((day,i) => {
+    const shownDays = daily.time.slice(start,start+6);
+    const rangeLow = Math.min(...shownDays.map((_,i) => Number(daily.temperature_2m_min[start+i])).filter(Number.isFinite));
+    const rangeHigh = Math.max(...shownDays.map((_,i) => Number(daily.temperature_2m_max[start+i])).filter(Number.isFinite));
+    const range = Math.max(1, rangeHigh - rangeLow);
+    const days = shownDays.map((day,i) => {
       const pos = i+start;
       const high = daily.temperature_2m_max[pos], low = daily.temperature_2m_min[pos];
-      return `<div class="day-row" title="${esc(formatDate(day))}"><strong>${pos===todayIndex?'Today':weekday(day)}</strong><span aria-label="${esc(condition(daily.weather_code[pos])[0])}">${condition(daily.weather_code[pos])[1]}</span><span class="bar" aria-hidden="true"></span><span class="day-temps">${round(high)}° / ${round(low)}° <span class="rain-percent">${pct(daily.precipitation_probability_max?.[pos])}</span></span></div>`;
+      const left = Number.isFinite(Number(low)) ? Math.max(0,Math.min(100,(low-rangeLow)/range*100)) : 0;
+      const width = Number.isFinite(Number(high)) && Number.isFinite(Number(low)) ? Math.max(4,Math.min(100,(high-low)/range*100)) : 0;
+      return `<div class="day-row" title="${esc(formatDate(day))}"><strong>${pos===todayIndex?'Today':weekday(day)}</strong><span aria-label="${esc(condition(daily.weather_code[pos])[0])}">${condition(daily.weather_code[pos])[1]}</span><span class="bar" style="--bar-left:${left}%;--bar-width:${width}%" aria-hidden="true"></span><span class="day-temps">${round(high)}° / ${round(low)}° <span class="rain-percent">${pct(daily.precipitation_probability_max?.[pos])}</span></span></div>`;
     }).join('');
     const nextHours = (data.hourly?.time || []).map((t,i) => ({t, i})).filter(v => v.t >= cur.time.slice(0,13)).slice(0,4);
-    const hourly = nextHours.map(({t,i}) => `<div class="hour-chip"><small>${formatClock(t)}</small><span>${condition(data.hourly.weather_code[i])[1]}</span><strong>${round(data.hourly.temperature_2m[i])}°</strong><small>${pct(data.hourly.precipitation_probability?.[i])} rain</small></div>`).join('');
+    const hourly = nextHours.map(({t,i}) => `<div class="hour-chip"><small>${formatClock(t)}</small><span role="img" aria-label="${esc(condition(data.hourly.weather_code[i], isDayAt(t,daily))[0])}">${condition(data.hourly.weather_code[i], isDayAt(t,daily))[1]}</span><strong>${round(data.hourly.temperature_2m[i])}°</strong><small>${pct(data.hourly.precipitation_probability?.[i])} rain</small></div>`).join('');
     $('forecastCard').innerHTML = `
       <div class="detail-location"><div><div class="section-kicker">LIVE FORECAST</div><h3>${esc(place.name)}</h3><small>${esc(place.city)}</small></div><button class="forecast-refresh" id="refreshForecast" title="Refresh forecast" aria-label="Refresh forecast">↻</button></div>
       <div class="current-row"><span class="weather-emoji" role="img" aria-label="${esc(cond[0])}">${cond[1]}</span><div><div class="current-temp">${round(cur.temperature_2m)}°</div><div class="condition-text">${esc(cond[0])}</div></div></div>
+      ${renderTrend(data, cur.time)}
       <div class="stat-grid"><div class="stat">FEELS LIKE<strong>${round(cur.apparent_temperature)}°F</strong></div><div class="stat">WIND<strong>${round(cur.wind_speed_10m)} mph</strong></div><div class="stat">HUMIDITY<strong>${pct(cur.relative_humidity_2m)}</strong></div><div class="stat">NEXT 24H RAIN CHANCE<strong>${pct(maxNextHours(data,cur.time))}</strong></div></div>
       <div class="small-heading">COMING UP</div><div class="hourly-strip">${hourly || '<span>Hourly data unavailable.</span>'}</div>
       <div class="small-heading heading-spaced">6-DAY OUTLOOK <span class="hint-text">HIGH / LOW · RAIN CHANCE</span></div><div class="day-list">${days}</div>

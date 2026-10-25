@@ -12,3 +12,60 @@ html,body{max-width:100%;overflow-x:clip}
 /* Kept independent from the Utah Sands rental website. */
 .rental-back{color:inherit;text-decoration:none;font-size:.84rem;opacity:.8;white-space:nowrap;margin-right:.5rem}.rental-back:hover,.rental-back:focus-visible{opacity:1;text-decoration:underline}
 @media(max-width:600px){.rental-back{font-size:.76rem;margin-right:0}}
+
+/* Forecast-first interface */
+:root{--navy:#142523;--navy2:#1d3831;--cream:#f7f8f3;--ink:#142522;--muted:#687973;--teal:#557d62;--gold:#d4fa56;--border:#e4e9e2;--shadow:0 18px 48px rgba(17,37,29,.06)}
+body{background:var(--cream);color:var(--ink)}
+.app-shell{max-width:1600px}
+.topbar{height:72px;border-bottom:1px solid #ecf0ea;background:#fff}
+.brand{font-size:20px;color:var(--ink)}
+.brand-mark{background:var(--gold);color:var(--ink);border-radius:11px;font-size:22px}
+.text-btn{color:var(--ink)}.text-btn span{background:#edf6cb;color:#38531b}
+.mini-descriptor{color:#718077}.rental-back{color:#596b62}
+.hero{min-height:0;background:linear-gradient(115deg,#10211f,#1b3a30 72%,#274c3a)}
+.hero-decor,.hero-note{display:none}
+.hero-content{max-width:none;width:100%;padding:38px clamp(20px,5vw,78px) 40px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.8fr);column-gap:clamp(25px,5vw,86px);align-items:end}
+.hero .eyebrow{grid-column:1/-1;color:var(--gold);letter-spacing:1.8px;margin-bottom:16px}
+.hero h1{grid-column:1;grid-row:2;margin:0;font-size:clamp(48px,5.7vw,78px);line-height:1.02;letter-spacing:-3.7px;max-width:780px}
+.hero h1 em{color:var(--gold);font-style:normal}
+.hero p{grid-column:1;grid-row:3;color:#c9d8cd;font-size:15px;max-width:570px;margin:17px 0 0}
+.search-wrap{grid-column:2;grid-row:2;height:60px;max-width:none;margin-bottom:4px;border-radius:10px;box-shadow:none}
+.search-wrap>span{color:#536f51}.search-wrap input{color:var(--ink)}
+.hero-tags{grid-column:2;grid-row:3;margin:14px 0 0;gap:7px}
+.hero-tags button{border-color:#6b8e76;background:#ffffff13;border-radius:6px;font-size:11px;padding:7px 10px}
+.content-area{padding-top:38px;padding-bottom:72px}
+.location-head{align-items:end}.location-head h2{font-size:clamp(32px,3.5vw,48px);line-height:1.08;letter-spacing:-1.8px}
+.location-head p{font-size:13px}.section-kicker{color:#617e45;letter-spacing:1.4px}
+.tabs{padding:20px 0 21px;gap:4px}.tabs button{border-radius:6px;padding:8px 14px;color:#637369}.tabs button.active{background:var(--ink);color:#fff}.tabs button:hover:not(.active){background:#e7eddf}
+.main-grid{grid-template-columns:minmax(0,1.25fr) minmax(320px,.78fr);gap:20px;align-items:start}
+.main-grid>div:first-child{grid-column:2;grid-row:1;min-width:0;background:white;border:1px solid var(--border);border-radius:18px;overflow:hidden}
+.detail-column{grid-column:1;grid-row:1}
+.watchlist-head{display:flex;justify-content:space-between;gap:10px;padding:16px 20px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:1.3px;font-weight:800;color:#718079}
+.watchlist-head span:last-child{color:#a0ada4;font-size:9px}
+.places-list{gap:0}.place-card{min-height:68px;padding:11px 17px;border:0;border-bottom:1px solid #edf0ea;border-radius:0;background:#fff;gap:10px;transition:background .15s}
+.place-card:hover{transform:none;border-color:#edf0ea;background:#f6f9f1}
+.place-card.selected{border:0;border-left:4px solid #aadf32;border-bottom:1px solid #e9efde;background:#f3f8e9;padding-left:13px}
+.place-icon{width:34px;height:34px;font-size:17px;border-radius:8px;background:#f0f4eb}
+.place-card strong{font-size:13px}.place-card small{font-size:11px;margin-top:0}.place-cat{font-size:9px;letter-spacing:.7px;color:#74876e}
+.save-btn{font-size:21px;color:#8c9a90}.save-btn.is-saved{color:#709e25}.chevron{color:#9cab9d}
+.pagination{margin:0;padding:13px}.outline-btn{border-color:#c8d5c2;border-radius:7px;color:var(--ink)}
+.forecast-card{position:static;min-height:550px;border-radius:18px;padding:27px 30px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.detail-location h3{font-size:27px;color:var(--ink)}.detail-location small{font-size:13px}
+.forecast-refresh{background:#f3f7eb;color:#415f32;border:1px solid #e7eddd}
+.current-row{margin:22px 0 24px;align-items:center;gap:16px}
+.weather-emoji{font-size:46px}.current-temp{font-size:clamp(72px,8vw,108px);line-height:.86;font-weight:500;letter-spacing:-7px;color:var(--ink)}
+.condition-text{font-size:15px;font-weight:600;color:#4d6255;margin-top:10px}
+.trend-panel{background:#f7f9f1;border:1px solid #edf2e6;border-radius:14px;padding:17px 18px 11px;margin:0 0 21px}
+.trend-head{display:flex;justify-content:space-between;align-items:end;gap:15px}.trend-head>div{display:grid;gap:1px}.trend-head .small-heading{margin:0;color:#6d8465}.trend-head strong{font-size:17px}.trend-head>span{font-size:12px;color:#60745f;font-weight:700}
+.trend-chart{display:block;width:100%;height:155px;margin-top:8px;overflow:visible}.trend-grid{fill:none;stroke:#e5ecdd;stroke-width:1}.trend-line{fill:none;stroke:#7daa24;stroke-width:4;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.trend-times{display:flex;justify-content:space-between;color:#82917c;font-size:10px;font-weight:700;margin-top:-6px}
+.stat-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:15px 0;margin-bottom:19px}
+.stat{background:transparent;border-radius:0;border-right:1px solid var(--border);padding:2px 11px;font-size:10px;line-height:1.25;color:#79877c}.stat:first-child{padding-left:0}.stat:last-child{border-right:0}.stat strong{font-size:17px;color:var(--ink);margin-top:5px;white-space:nowrap}
+.small-heading{color:#718078;letter-spacing:1.3px}.hourly-strip{gap:7px}.hour-chip{background:#f7f9f4;border:1px solid #eef1e9;border-radius:8px;padding:9px 4px}.hour-chip strong{color:var(--ink)}
+.day-list{gap:0}.day-row{grid-template-columns:47px 28px minmax(50px,1fr) 128px;padding:9px 0;border-bottom:1px solid #f0f2ec}.day-row:last-child{border-bottom:0}.day-row strong{color:var(--ink)}.day-row .bar{background:#edf2e4;height:7px}.day-row .bar:before{left:var(--bar-left,0);width:var(--bar-width,0);background:#b0de47}.rain-percent{color:#587a44}
+.wedding-promo{background:#1a3129;color:#fff;border-radius:14px;padding:19px}.wedding-promo p{color:#bbcfc1}.promo-icon{color:var(--gold)}.promo-button{color:var(--gold)}
+.primary-btn{background:var(--gold);color:var(--ink);border-radius:7px}.planner-section{background:#142722}.planner-section h2 em{color:var(--gold)}.section-kicker.light{color:var(--gold)}.planner-panel{border-radius:14px}.planner-result{background:#f3f7eb}
+footer{background:#f2f5ed}.footer-brand{color:var(--ink)}footer a{color:#4a754e}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline-color:#b2e636}
+@media(max-width:1000px){.hero-content{grid-template-columns:1fr}.hero .eyebrow,.hero h1,.hero p,.search-wrap,.hero-tags{grid-column:1;grid-row:auto}.search-wrap{margin-top:25px;max-width:680px}.hero-tags{margin-top:9px}.main-grid{grid-template-columns:1fr}.detail-column,.main-grid>div:first-child{grid-column:1;grid-row:auto}.detail-column{grid-row:1}.main-grid>div:first-child{grid-row:2}}
+@media(max-width:600px){.topbar{height:65px}.brand{font-size:17px;gap:7px}.brand-mark{width:34px;height:34px;font-size:19px}.rental-back{display:none}.top-actions{gap:0}.text-btn{font-size:12px;white-space:nowrap}.hero-content{padding:30px 20px 34px}.hero h1{font-size:clamp(42px,11vw,60px);letter-spacing:-2.8px}.hero p{font-size:13px}.search-wrap{height:54px}.hero-tags button{font-size:10px}.content-area{padding:30px 14px 55px}.location-head h2{font-size:33px}.location-head p{margin-top:8px}.tabs{padding:15px 0;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tabs button{padding:8px 11px}.forecast-card{padding:20px 17px;min-height:0}.detail-location h3{font-size:23px}.current-temp{font-size:82px}.trend-panel{padding:14px 12px 10px}.trend-chart{height:120px}.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:13px}.stat:nth-child(2){border-right:0}.stat:nth-child(3){padding-left:0}.stat strong{font-size:15px}.day-row{grid-template-columns:42px 24px minmax(28px,1fr) 119px}.planner-section{padding:45px 17px}}
